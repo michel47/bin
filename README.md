@@ -28,10 +28,10 @@ so it is not really [SemVer](https://semver.org/) unless you do
 * and a PATCH every 2 days or so
 
 Also you might want to do development releases on Wednesday and Saturday
-in order to have odd release number :)
+in order to have odd release number :smiley:
 
-[version](version) prints out the current file version and the next scheduled one
-[nextr](nextr) gives you the date and version of the next release
-[sched](sched) indicates the next 5 days versions
+- [version](version) prints out the current file version and the next scheduled one
+- [nextr](nextr) gives you the date and version of the next release
+- [sched](sched) indicates the next 5 days versions
 
-Note version and nextr use "[$ENV{SITE}/lib](../site)" libraries (called by [SITE.pm](SITE.pm))
+Note version and nextr use "[$ENV{SITE}/lib](../../../site)" libraries (called by [SITE.pm](SITE.pm))
