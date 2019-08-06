@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+BEGIN { our $update = 1; $verbose = 0} # for SITE.pm
+
+# next release
+use Time::Local qw(timelocal);
+my $_1day = 24 * 3600;
+my $period = $_1day * 7 / 4;
+
+my $tic = time;
+my $wday = (localtime($tic))[6];
+my ($hour,$mday,$mon,$yy) = (localtime($tic -  $wday * 24 * 3600 ))[2..5];
+my $sunday = timelocal(0,0,0,$mday,$mon,1900+$yy);
+#printf "sunday: %s.%s.%s\n",$mday,$mon+1,1900+$yy;
+
+my $tic = $sunday + (1 + int((time - $sunday)/$period)) * $period - 1;
+
+
+use lib $ENV{HOME}.'/bin'; # /!\ requirement SITE.pm need to be in ~/bin
+use SITE qw();
+use UTIL qw(rev);
+
+my ($m,$r) = &rev($tic);
+printf "major: %.1f\n",$m/100;
+printf "release: %.2f -- %s (v%.1f.%d)\n",($m+$r)/100,&hdate($tic),$m/100,$m%10+$r;
+
+local *EXEC; open EXEC, '|espeak -a 28';
+printf EXEC "release: %.2f -- %s (version %.1f.%d)\n",($m+$r)/100,&ldate($tic),$m/100,$m%10+$r;
+close EXEC;
+
+# -----------------------------------------------------------------------
+sub ldate { # return long date
+  my ($time,$delta) = @_;
+  my $stamp = $time+$delta;
+  my $tic = int($stamp);
+  #my $ms = ($stamp - $tic)*1000;
+  my $LDoW = [qw( Sunday Monday Tuesday Wednesday Thursday Friday Saturday )];
+  my $LMoY = [qw( January Febuary March April May June July August September October November December )];
+  my ($sec,$min,$hour,$mday,$mon,$yy,$wday) = (localtime($tic))[0..6];
+  my ($yr4,$yr2) =($yy+1900,$yy%100);
+
+  # Mon, 01 Jan 2010 00:00:00 GMT
+  my $date = sprintf '%3s, %2d %3s %04u <break time="2000ms"/>  %02u hour local time',
+             $LDoW->[$wday],$mday,$LMoY->[$mon],$yr4, $hour+1;
+  return $date;
+}
+# -----------------------------------------------------------------------
+sub hdate { # return HTTP date (RFC-1123, RFC-2822) 
+  my ($time,$delta) = @_;
+  my $stamp = $time+$delta;
+  my $tic = int($stamp);
+  #my $ms = ($stamp - $tic)*1000;
+  my $DoW = [qw( Sun Mon Tues Wed Thur Fri Sat )];
+  my $MoY = [qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec )];
+  my ($sec,$min,$hour,$mday,$mon,$yy,$wday) = (gmtime($tic))[0..6];
+  my ($yr4,$yr2) =($yy+1900,$yy%100);
+
+  # Mon, 01 Jan 2010 00:00:00 GMT
+  my $date = sprintf '%3s, %02d %3s %04u %2u:%02u GMT',
+             $DoW->[$wday],$mday,$MoY->[$mon],$yr4, $hour,$min;
+  return $date;
+}
+# -----------------------------------------------------------------------
+1;

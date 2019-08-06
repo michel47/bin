@@ -12,10 +12,26 @@ Did you know \**nix*time has a beginning and end
 
 ### write everything in binary ...
 
-an other tip if you want to convert any text into binary
-you can simply decode it like if it were a base64 encoding
+An other tip, if you want to convert any text into binary
+you can simply decode it like if it were base64 encoded
 (ok you don't have all the punctuation, but with a tr{+/=}{, .}
 you can do a lot)
 
  check our [ubase64](ubase64)
 
+### version nextr, & sched
+
+in order to commit to regular releases, I use a time based versioning convention
+so it is not really [SemVer](https://semver.org/) unless you do
+* a MAJOR release every 10 weeks
+* a MINOR release every week
+* and a PATCH every 2 days or so
+
+Also you might want to do development releases on Wednesday and Saturday
+in order to have odd release number :)
+
+[version](version) prints out the current file version and the next scheduled one
+[nextr](nextr) gives you the date and version of the next release
+[sched](sched) indicates the next 5 days versions
+
+Note version and nextr use "[$ENV{SITE}/lib](../site)" libraries (called by [SITE.pm](SITE.pm))

@@ -1,0 +1,14 @@
+#!/usr/bin/env perl
+
+use lib $ENV{HOME}.'/bin';
+use SITE qw();
+use UTIL qw(version rev);
+
+my $file = shift || __FILE__;
+my @ver = &version($file);
+printf "file: %s\n",$file;
+printf qq'version: "%.2f - %s"\n',@ver;
+my ($m,$r) = &rev(time);
+printf qq'scheduled: "v%.1f.%d" # (%s+%s)\n',$m/100,$m%10+$r,$m,$r;
+exit $?;
+1;
