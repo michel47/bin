@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use MIME::Base64 qw(decode_base64);
+
+# simple script to convert base64 encoded data into hex
+
+$| = 1;
+while(<>) {
+ tr{, .}{+/=};
+ my $data = &decode_base64($_);
+ printf "%s\n",unpack'H*',$data;
+}
+
+1;
