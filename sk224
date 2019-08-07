@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+BEGIN { my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,$p):'.'; }
+
+use lib $bindir; use SITE qw(); # enabling site's modules
+use UTIL qw(hashr shake encode_base58 encode_base58f encode_base32 encode_base10);
+
+local $/ = undef;
+my $buf = <STDIN>;
+$/ = "\n"; # chomp $buf;
+
+my $hash = &shake(224,$buf);
+my $mhash = pack('H*',"01551220").&hashr('SHA256',1,$buf);
+#printf "mh16: f%s\n",unpack'H*',$mhash;
+#printf "mh32: b%s\n",encode_base32($mhash);
+#printf "mh58: z%s\n",encode_base58($mhash);
+printf "--- # shake224 for /ipfs/z%s\n",&encode_base58($mhash);
+printf "h10: 9%s\n",&encode_base10($hash);
+printf "h16: f%s\n",unpack'H*',$hash;
+printf "h58f: Z%s\n",&encode_base58f($hash);
+1;
