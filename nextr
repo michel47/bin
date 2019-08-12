@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-BEGIN { our $update = 1; $verbose = 0} # for SITE.pm
+BEGIN { $update=1;$verbose=0; my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,0,$p):'.'; } # for SITE.pm
 
 # next release
 use Time::Local qw(timelocal);
@@ -14,14 +14,13 @@ my $sunday = timelocal(0,0,0,$mday,$mon,1900+$yy);
 
 my $tic = $sunday + (1 + int((time - $sunday)/$period)) * $period - 1;
 
-
-use lib $ENV{HOME}.'/bin'; # /!\ requirement SITE.pm need to be in ~/bin
+use lib $bindir;
 use SITE qw();
 use UTIL qw(rev);
 
 my ($m,$r) = &rev($tic);
-printf "major: %.1f\n",$m/100;
-printf "release: %.2f -- %s (v%.1f.%d)\n",($m+$r)/100,&hdate($tic),$m/100,$m%10+$r;
+printf "major: %.2f\n",int($m/10)/10;
+printf "release: %.2f -- %s (v%.1f.%d)\n",($m+$r)/100,&hdate($tic),int($m/10)/10,$m%10+$r;
 
 local *EXEC; open EXEC, '|espeak -a 28';
 printf EXEC "release: %.2f -- %s (version %.1f.%d)\n",($m+$r)/100,&ldate($tic),$m/100,$m%10+$r;
@@ -39,7 +38,7 @@ sub ldate { # return long date
   my ($yr4,$yr2) =($yy+1900,$yy%100);
 
   # Mon, 01 Jan 2010 00:00:00 GMT
-  my $date = sprintf '%3s, %2d %3s %04u <break time="2000ms"/>  %02u hour local time',
+  my $date = sprintf '%3s, %2d %3s %04u %02u hour local time',
              $LDoW->[$wday],$mday,$LMoY->[$mon],$yr4, $hour+1;
   return $date;
 }

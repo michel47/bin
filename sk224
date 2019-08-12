@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-BEGIN { my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,$p):'.'; }
+BEGIN { my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,0,$p):'.'; }
 
 use lib $bindir; use SITE qw(); # enabling site's modules
 use UTIL qw(hashr shake encode_base58 encode_base58f encode_base32 encode_base10);
@@ -8,13 +8,21 @@ local $/ = undef;
 my $buf = <STDIN>;
 $/ = "\n"; # chomp $buf;
 
+my $qhash = pack('H*',"01551220").&hashr('SHA256',1,$buf);
+#printf "mh16: f%s\n",unpack'H*',$qhash;
+#printf "mh32: b%s\n",encode_base32($qhash);
+#printf "mh58: z%s\n",encode_base58($qhash);
+printf "--- # shake224 for /ipfs/z%s\n",&encode_base58($qhash);
+
 my $hash = &shake(224,$buf);
-my $mhash = pack('H*',"01551220").&hashr('SHA256',1,$buf);
-#printf "mh16: f%s\n",unpack'H*',$mhash;
-#printf "mh32: b%s\n",encode_base32($mhash);
-#printf "mh58: z%s\n",encode_base58($mhash);
-printf "--- # shake224 for /ipfs/z%s\n",&encode_base58($mhash);
 printf "h10: 9%s\n",&encode_base10($hash);
 printf "h16: f%s\n",unpack'H*',$hash;
 printf "h58f: Z%s\n",&encode_base58f($hash);
+
+my $mhash = pack('H*',"0170191C").$hash;
+my $mh32 = &encode_base32($mhash);
+printf "mh32: b%s\n",lc$mh32;
+printf "mh58: z%s\n",&encode_base58($mhash);
+my $shard = substr($mh32,-3,2);
+printf "file: ~/.ipfs/%s/%s.data\n",$shard,$mh32;
 1;
