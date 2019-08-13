@@ -1,0 +1,14 @@
+{
+  "currency":"chf",
+  "charges": [
+    {
+      "event":"commit",
+      "action":"added",
+      "chargetype":"author",
+      "chargeref":"michel@gc-bank.org",
+      "description":"Author specific charge for Michel when he commit a new release.",
+      "calculationtype":"normal",
+      "chargeamount":"350.00"
+    }
+  ]
+}
