@@ -71,6 +71,18 @@ EOY
 
 [yml]: http://duckduckgo.com/?q=YAML
 
+
+### mhash
+
+a script to quickly compute a multihash of a typed-in string,
+3 parameters :
+
+- the choice of the algorithm
+- the number of iteration
+- the length of the result
+
+base 16,32,58,64 supported
+
 <!--
 try to think CI !
 
