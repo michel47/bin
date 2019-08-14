@@ -9,6 +9,6 @@ my @ver = &version($file);
 printf "file: %s\n",$file;
 printf qq'version: "%.2f - %s"\n',@ver;
 my ($m,$r) = &rev(time);
-printf qq'scheduled: "v%.1f.%d" # (%s+%s)\n',$m/100,$m%10+$r,$m,$r;
+printf qq'scheduled: "v%.1f.%d" # (%s+%s)\n',int($m/10)/10,$m%10+$r,$m,$r;
 exit $?;
 1;
