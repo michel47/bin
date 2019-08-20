@@ -6,7 +6,7 @@ use SITE qw();
 use UTIL qw(hashr encode_base64m encode_base32 encode_base58 varint);
 
 my $n = 1;
-my $l = 32;
+my $l = 24;
 my $a = 'MD5';
 my $hcode = { # multihash codes
  'MD5' => pack('H*','d5'),
@@ -29,12 +29,13 @@ while (<>) {
    $buf =~ s/\\n/\n/g;
    $buf =~ s/{%5C:$code}/\\\\/g;
    my $hash = &hashr($a,$n,$buf); # hash it n times ...
-   my $subhash = substr($hash,0,$l); # truncate it
-   printf "// algo: (%s^%d)-%d-%d (%dB)\n",$a,$n,length($hash)*8,length($subhash)*8,$l;
-   printf "h16: %s\n",unpack'H*',$hash;
-   printf "h64: %s\n",&encode_base64m($hash);
+   my $pad = "\x00"x$l;
+   my $subhash = substr($hash.$pad,0,$l); # truncate it
+   printf "// algo: (%s^%d)-%d-%d (%dB)\n",$a,$n,length($hash)*8,length(substr($hash,0,$l))*8,$l;
+   printf "h16: %s\n",unpack'H*',$subhash;
+   printf "h64: %s\n",&encode_base64m($subhash);
    my $mhdr = $hcode->{$a}.&varint($l);
-   my $mhash = $mhdr . $hash;
+   my $mhash = $mhdr . $subhash;
    printf "mh16: f%s\n",unpack'H*',$mhash;
    printf "mh32: b%s\n",&encode_base32("\x01\55".$mhash);
    printf "mh58: z%s\n",&encode_base58("\x01\x55".$mhash);
