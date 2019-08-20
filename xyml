@@ -14,7 +14,11 @@ my $yml = Load($buf);
 my $LF = ($#ARGV > 0) ? "\n" : '';
 if (@ARGV) {
 foreach (@ARGV) {
-  print $yml->{$_},$LF;
+  if (ref($yml->{$_}) eq 'HASH') {
+    print Dump($yml->{$_}),$LF;
+  } else {
+    print $yml->{$_},$LF;
+  }
 }
 } else {
  printf "%s...\n",YAML::Syck::Dump($yml);
