@@ -1,0 +1,50 @@
+#
+
+if echo $0 | grep -q '/'; then
+export PATH=${0%/*}:$PATH
+fi
+find . -name "*.*~*" -delete
+
+gitid=$(git rev-parse --short HEAD)
+
+tic=$(date +%s)
+ver=$(version $0 | xyml scheduled)
+echo ver: $ver
+qm=$(ipfs add -Q -r -n . )
+eval $(perl -S fullname.pl -a $qm | eyml)
+git config user.name "$fullname"
+git config user.email $user@healthium.gq
+echo "gituser: $(git config user.name) <$(git config user.email)>"
+tag=$(echo -n "$user@healthium.gq" | ipfs add -Q --raw-leaves --hash id --cid-base=base58btc)
+
+
+git diff HEAD .
+date=$(date +%D);
+time=$(date +%T);
+echo "commit msg ?"
+read ans
+IFS='' read -d '' msg <<EOT
+$ver $time: ${ans:-commit} on $date ~ $firstname $lni.
+qm: $qm
+tag: $tag
+EOT
+echo "msg: $msg"  | sed -e '2,$s/^/  /'
+if git commit -m "$msg"; then
+gitid=$(git rev-parse HEAD)
+git tag -f -a $ver -m "tagging $gitid on $date"
+#echo gitid: ${gitid:0:9} # this is bash!
+echo gitid: $gitid | cut -b 1-14
+if test -e revs.log; then
+echo $tic: $gitid >> revs.log
+fi
+
+# test if tag $ver exist ...
+if git ls-remote --tags | grep "$ver"; then
+git push --delete origin "$ver"
+fi
+fi
+echo "git push : "
+git push --follow-tags
+echo .
+
+

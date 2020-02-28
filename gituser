@@ -1,9 +1,20 @@
 #
 
+set healthium.gq chii.ml keysm.ml
+tic=$(date +"%s")
+d=$(expr \( $tic % $# \) + 1)
+echo d:$d
+domain=$(eval echo \$$d)
+echo domain: $domain
+# bash only
+#domains=(healthium.gq chii.ml keysm.ml)
+#d=$(expr $tic % $3 )
+#domain=${domains[$d]}
+
 qm=$(ipfs add -Q -r -n . )
 eval $(perl -S fullname.pl -a $qm | eyml)
 git config user.name "$fullname"
-git config user.email $user@healthium.gq
+git config user.email $user@$domain
 
 echo "gituser: $(git config user.name) <$(git config user.email)>"
 
