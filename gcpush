@@ -15,7 +15,7 @@ eval $(perl -S fullname.pl -a $qm | eyml)
 git config user.name "$fullname"
 git config user.email $user@healthium.gq
 echo "gituser: $(git config user.name) <$(git config user.email)>"
-tag=$(echo -n "$user@healthium.gq" | ipfs add -Q --raw-leaves --hash id --cid-base=base58btc)
+tag=$(echo -n "$user@gradual.gq" | ipfs add -Q --raw-leaves --hash id --cid-base=base58btc)
 
 
 git diff HEAD .

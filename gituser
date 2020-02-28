@@ -1,11 +1,12 @@
 #
 
-set healthium.gq chii.ml keysm.ml
+set healthium.gq chii.ml keysm.ml gradual.gq bigtm.gq blockringtm.gq bringtm.ml clockchain.tk csap.ml current-see.ml dids.ml evolutiontm.tk gatetm.tk gcfs.ml gctm.gq gctm.ml glog.gq happycoin.gq happycoin.cf hellodoc.tk hltm.ml
 tic=$(date +"%s")
 d=$(expr \( $tic % $# \) + 1)
-echo d:$d
+#echo d:$d
 domain=$(eval echo \$$d)
-echo domain: $domain
+#echo domain: $domain
+
 # bash only
 #domains=(healthium.gq chii.ml keysm.ml)
 #d=$(expr $tic % $3 )
