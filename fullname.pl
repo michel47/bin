@@ -85,6 +85,13 @@ printf "%s %s. %s\n",$fullname[0],substr($fullname[1],0,1),$fullname[-2];
 
 if ($all) {
    printf "ini: %s%s%s\n",uc(substr($fullname[0],0,1)),uc(substr($fullname[1],0,1)),uc(substr($fullname[-2],0,1));
+   printf "firstname: %s\n",$fullname[0];
+   printf "midlename: %s\n",$fullname[1];
+   printf "lastname: %s\n",$fullname[-2];
+   printf "maidenname: %s\n",$fullname[-1];
+   printf "lni: %s\n",uc(substr($fullname[-2],0,1));
+   printf "mni: %s\n",uc(substr($fullname[1],0,1));
+   printf "fni: %s\n",uc(substr($fullname[0],0,1));
    printf "user: %s%s\n",lc(substr($fullname[0],0,1)),lc($fullname[-2]);
    printf "email: %s%s+%s\@%s\n",lc(substr($fullname[0],0,1)),lc($fullname[-2]),$id7,'ydentity.ml';
 }
