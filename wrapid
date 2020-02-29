@@ -1,0 +1,123 @@
+#
+
+assetsdir=${ASSET_PATH:-$HOME/assets}
+mutdir=${MUTABLES_DIR:-$HOME/etc/mutables}
+# this script create a wraper for any ipfs file using the hash id
+#
+# dependencies
+#  cname.pl
+#  mbase.pl
+set -e
+
+file="$1"
+if [ -e "$file" ]; then
+  echo file: $file
+  if [ -d "$file" ]; then rec="-r"; else rec="" ; fi
+  qm58=$(ipfs add -Q --pin=false --progress=false --raw-leaves --trickle --chunker size-1048576 --hash sha1 --cid-base=base58btc $rec "$1")
+  wrap=$(ipfs add -Q -w --pin=false --progress=false --raw-leaves --trickle --chunker size-1048576 --hash sha1 --cid-base=base58btc $rec "$1")
+  echo wrap: $wrap
+  fname=${file##*/}
+  name="${2:-$fname}"
+# ipfs object get $wrap
+else 
+  ipath=$(ipfs resolve "$1")
+  qm58="${ipath##*ipfs/}"
+  qm58="${qm58##*p2p/}"
+  qname="$(echo $qm58|cut -c-7)"
+  name="${2:-$qname.data}"
+fi
+# -------------------------------------------------------------------------------------------
+### PING the sites !
+#$HOME/bin/qmping $qm58 | $HOME/bin/uni9 | grep -i -e "etag" -e "modified" -e "ipfs" -e "cdn" &
+# -------------------------------------------------------------------------------------------
+echo name: $name
+echo qm: $qm58
+qname="$(echo $qm58|cut -c-7)"
+echo qname: $qname
+# backup file ...
+aname=$(echo $name | sed -e "s/\.\([^.]*\)/-$qname.\1/")
+echo aname: $aname
+
+echo -n "x-info: "
+ipfs get /ipfs/$qm58 -o $assetsdir/$aname 2>/dev/null
+eval $(perl -S cname.pl $assetsdir/$aname | eyml)
+#cname=$(cname $assetsdir/$aname | grep cname: | cut -d' ' -f 2)
+echo wid: $wid
+echo cname: $cname
+if [ "x$wid" = 'x' ]; then
+exit -$$
+fi
+
+size=$(ipfs files stat --format "<size>" /ipfs/$qm58)
+csize=$(ipfs files stat --size=1 /ipfs/$qm58)
+echo size: $size
+
+if ipfs --timeout 2s files stat --hash / 1>/dev/null; then
+  ipfs files mkdir -p /var/wrapid/$wid
+
+  if ipfs files rm /var/wrapid/$wid/$name; then true; fi
+  ipfs files cp /ipfs/$qm58 /var/wrapid/$wid/$name
+  qmvar=$(ipfs files stat --hash /var)
+  echo "canonic: http://127.0.0.1:8080/ipfs/$qmvar/wrapid/$wid/$name"
+fi
+echo $file >> $mutdir/wrapid.log
+
+mh=$(echo "{'data':'CAE=','links':[{'Cid':{'/':'$qm58'},'Name':'$name','Size':$csize}]}" | sed -e "s/'/\"/g" | ipfs dag put -f protobuf)
+echo mh: $mh
+w32=$(echo $mh | perl -S mbase.pl -d | xyml b32)
+echo "url: http://$w32.ipfs.dweb.link/$name"
+echo "url: https://$w32.cf-ipfs.com/$name"
+echo $w32 >> $mutdir/BAFYs.log
+
+if [ "x$wrap" != 'x' ]; then
+  echo "dag: '$(ipfs dag get $wrap)'"
+fi
+echo "dag: '$( ipfs dag get $mh )'"
+echo "wrap: http://cloudflare-ipfs.com/ipfs/$mh/"
+
+data=$(ipfs block get $mh | xxd -p -c 80)
+len=$(echo $data|wc -c)
+vlen=$(perl -e "printf '%02x',$len/2;")
+echo "f017000"$vlen$data | perl -S mbase.pl -d | grep -v '^[\.\-]'
+eval $(echo "f017000"$vlen$data | perl -S mbase.pl -d | eyml)
+echo "qm58: https://ipfs.blockringtm.ml/ipfs/$qm58"
+echo "wrap: https://ipfs.blockringtm.ml/ipfs/$mh/"
+echo "wrap: http://127.0.0.1:8080/ipfs/$mh/"
+echo "wrap: http://yoogle.com:8080/ipfs/$b58/"
+echo "url: https://ipfs.blockring™.ml/ipfs/$b58/$name"
+echo "url: https://ipfs.2read.net/ipfs/$b58f/$name"
+echo "url: http://dweb.link/ipfs/$b32/$name"
+echo "url: https://cloudflare-ipfs.com/ipfs/$b58f/"
+if echo $b64m | grep -q '/'; then
+echo "url: https://gateway.ipfs.io/ipfs/$b64u/$name"
+else
+echo "url: https://gateway.ipfs.io/ipfs/$b64m/$name"
+fi
+echo "url: https://siderus.io/ipfs/$b64u/"
+echo "url: https://hardbin.com/ipfs/$b58/"
+## b32 name is too long !
+##echo "32: https://$b32.cf-ipfs.com/"
+if echo "$1" | grep -q -e "\.jpg" -e "\.png" ; then
+static='https://cdn.statically.io/img'
+echo "cdn: $static/ipfs.blockringtm.ml/ipfs/$qm58"
+echo "cdn: $static/gateway.ipfs.io/ipfs/$b64u/$name"
+echo "cdn: $static/cloudflare-ipfs.com/ipfs/$b64u/$name"
+else
+save=https://web.archive.org/save/
+wback=https://web.archive.org/web/*/
+echo "save: ${save}https://ipfs.blockringtm.ml/ipfs/$qm58"
+echo "save: ${save}https://$w32.cf-ipfs.com/$name"
+if echo $b64m | grep -q '/'; then
+echo "save: ${save}https://gateway.ipfs.io/ipfs/$b64u/$name"
+echo "wback: ${wback}https://gateway.ipfs.io/ipfs/$b64u/$name"
+else
+echo "save: ${save}https://gateway.ipfs.io/ipfs/$b64m/$name"
+echo "wback: ${wback}https://gateway.ipfs.io/ipfs/$b64m/$name"
+fi
+echo "url: https://web.archive.org/web/*_/http://$w32.ipfs.dweb.link/"
+fi
+
+# vim: nospell
+
+
+
