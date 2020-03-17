@@ -1,6 +1,6 @@
 #
 
-assetsdir=${ASSET_PATH:-$HOME/assets}
+assetsdir=${ASSETS_PATH:-$HOME/assets}
 mutdir=${MUTABLES_DIR:-$HOME/etc/mutables}
 # this script create a wraper for any ipfs file using the hash id
 #
@@ -40,8 +40,13 @@ echo aname: $aname
 
 echo -n "x-info: "
 ipfs get /ipfs/$qm58 -o $assetsdir/$aname 2>/dev/null
+echo "file: $assetsdir/$aname"
+ls -l $assetsdir/$aname
+exit 0;
+
 eval $(perl -S cname.pl $assetsdir/$aname | eyml)
 #cname=$(cname $assetsdir/$aname | grep cname: | cut -d' ' -f 2)
+#
 echo wid: $wid
 echo cname: $cname
 if [ "x$wid" = 'x' ]; then
@@ -97,9 +102,13 @@ echo "url: https://siderus.io/ipfs/$b64u/"
 echo "url: https://hardbin.com/ipfs/$b58/"
 ## b32 name is too long !
 ##echo "32: https://$b32.cf-ipfs.com/"
-if echo "$1" | grep -q -e "\.jpg" -e "\.png" ; then
+if echo "$1" | grep -q -e "\.jpg" -e "\.png" -e "\.svg" ; then
 static='https://cdn.statically.io/img'
+if echo "$1" | grep -q -e "\.svg" ; then
+echo "cdn: $static/ipfs.blockringtm.ml/ipfs/$b58/$name"
+else
 echo "cdn: $static/ipfs.blockringtm.ml/ipfs/$qm58"
+fi
 echo "cdn: $static/gateway.ipfs.io/ipfs/$b64u/$name"
 echo "cdn: $static/cloudflare-ipfs.com/ipfs/$b64u/$name"
 else
