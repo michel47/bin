@@ -42,7 +42,7 @@ echo -n "x-info: "
 ipfs get /ipfs/$qm58 -o $assetsdir/$aname 2>/dev/null
 echo "file: $assetsdir/$aname"
 ls -l $assetsdir/$aname
-exit 0;
+exit 0; # provlem with cname.pl & eyml
 
 eval $(perl -S cname.pl $assetsdir/$aname | eyml)
 #cname=$(cname $assetsdir/$aname | grep cname: | cut -d' ' -f 2)
