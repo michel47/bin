@@ -2,6 +2,17 @@
 
 assetsdir=${ASSETS_PATH:-$HOME/assets}
 mutdir=${MUTABLES_DIR:-$HOME/etc/mutables}
+if ! test -e $mutdir; then
+echo x-warn: ! -e ASSETS_PATH=$assetsdir
+fi
+if ! test -e $mutdir; then
+echo x-warn: ! -e MUTABLE_DIR=$mutdir
+fi
+if [ "x$IPFS_PATH" = 'x' ]; then
+  export IPFS_PATH=/media/IPFS/IMAGES
+else
+ echo IPFS_PATH: $IPFS_PATH
+fi
 # this script create a wraper for any ipfs file using the hash id
 #
 # dependencies
@@ -30,6 +41,7 @@ fi
 ### PING the sites !
 #$HOME/bin/qmping $qm58 | $HOME/bin/uni9 | grep -i -e "etag" -e "modified" -e "ipfs" -e "cdn" &
 # -------------------------------------------------------------------------------------------
+name=$(echo $name | sed -e 's/  */_/g')
 echo name: $name
 echo qm: $qm58
 qname="$(echo $qm58|cut -c-7)"
@@ -42,7 +54,7 @@ echo -n "x-info: "
 ipfs get /ipfs/$qm58 -o $assetsdir/$aname 2>/dev/null
 echo "file: $assetsdir/$aname"
 ls -l $assetsdir/$aname
-exit 0; # provlem with cname.pl & eyml
+#exit 0; # problem with cname.pl & eyml
 
 eval $(perl -S cname.pl $assetsdir/$aname | eyml)
 #cname=$(cname $assetsdir/$aname | grep cname: | cut -d' ' -f 2)
@@ -57,7 +69,7 @@ size=$(ipfs files stat --format "<size>" /ipfs/$qm58)
 csize=$(ipfs files stat --size=1 /ipfs/$qm58)
 echo size: $size
 
-if ipfs --timeout 2s files stat --hash / 1>/dev/null; then
+if ipfs --timeout 2s files stat --hash /var/wrapid 1>/dev/null; then
   ipfs files mkdir -p /var/wrapid/$wid
 
   if ipfs files rm /var/wrapid/$wid/$name; then true; fi
@@ -67,6 +79,7 @@ if ipfs --timeout 2s files stat --hash / 1>/dev/null; then
 fi
 echo $file >> $mutdir/wrapid.log
 
+echo create wraper
 mh=$(echo "{'data':'CAE=','links':[{'Cid':{'/':'$qm58'},'Name':'$name','Size':$csize}]}" | sed -e "s/'/\"/g" | ipfs dag put -f protobuf)
 echo mh: $mh
 w32=$(echo $mh | perl -S mbase.pl -d | xyml b32)
