@@ -35,15 +35,24 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
 #understand variable=value on the command line...
 eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
 
+if ($dbug) { eval "use YAML::Syck qw(Dump);" }
+
 # load md file and replace {{.*}}
 my $file = shift;
 my ($fpath,$fname,$bname,$ext) = &fname($file);
 printf "// [INFO]: fpath=%s\n",$fpath if $info;
-if (! -e $file && $ext eq '') {
+if (! -e $file && $ext eq '') { # default extension is .mdx
    $ext = 'mdx';
    $fname = $bname . '.' . $ext;
    $file =$fpath . '/' . $bname . '.' . $ext;
 }
+# -------------------------------------------------
+# get qmhash
+# echo -n 'qmRCSKeywords' | ipfs add -Q -n
+my $qmRCSkeywords = 'QmYEMrpMSbBuZBy3aTabtF14o8vbFoBrWjLHp7X8GndKgo';
+my $content = &read_file($file);
+   $content =~ s/\$qm: \w+\$/\$qm: $qmRCSkeywords\$/; # remove qm RCSKeyword !
+my $qm = &ipfs_api('add',$file,$content)->{'Hash'};
 # -------------------------------------------------
 # get the destination file name
 my $target;
@@ -51,6 +60,8 @@ if (defined $outfile) { # passed as -o option
   $target = $outfile;
 } elsif ($ARGV[0]) { # passed a second arguments
   $target = $ARGV[0];
+} elsif ($ext eq 'md') {
+  $target = $file; $target =~ s/\.$ext/.md~/;
 } else {
   $target = $file; $target =~ s/\.$ext/.md/;
 }
@@ -58,7 +69,9 @@ if (defined $outfile) { # passed as -o option
 
 # 1) extract yaml data :
 my $yml = &extract_yml($file);
-if (0) {
+$yml->{QM} = $qm;
+$yml->{QMID} = substr($qm,0,7);
+if ($dbug) {
 my $ymlf = $target; $ymlf =~ s/\.[^\.]+$//; $ymlf .= '.yml.txt';
 use YAML::Syck qw(DumpFile); DumpFile($ymlf,$yml);
 }
@@ -203,8 +216,8 @@ if ($s) {
 
 # 4) write file
 if ($file eq $target) { # /!\ DANGEROUS 
-   print "// ${red}/!\\${nc} CAUTION $file is rename to $file~\n";
-   unlink "$file~"; rename $file,"$file~";
+   print "// ${red}/!\\${nc} CAUTION $target is rename to $target.out\n";
+   $target .= '.out';
 }
 print "// moustache: -> $target\n";
 open *T; open T,'>',$target;
@@ -216,7 +229,7 @@ close T;
 exit $?;
 
 # -----------------------------------------------------
-sub get_keylist {
+sub get_keylist { # TBD to upgrade to ipfs_get_api
    my $keylist = {};
    my $cmd = sprintf 'ipfs key list -l';
    local *EXEC; open EXEC,"$cmd|" or die $!;
@@ -303,7 +316,120 @@ sub extract_yml {
    }
    return $data;
 }
-
+# -----------------------------------------------------
+sub read_file {
+  local *F; open F,'<',$_[0];
+  local $/ = undef; my $buf = <F>; close F;
+  return $buf;
+}
+# ---------------
+sub write_file {
+  my $file = shift;
+  local *F; open F,'>',$file;
+  foreach (@_) {
+    print F $_;
+  }
+  close F;
+}
+# -----------------------------------------------------
+sub ipfs_api {
+   my $api_url;
+   my $cmd = shift;
+   if ($ENV{HTTP_HOST} =~ m/heliohost/) {
+      $api_url = sprintf'https://%s/api/v0/%%s?arg=%%s%%s','ipfs.blockringtm.ml';
+   } else {
+     my ($apihost,$apiport) = &get_apihostport();
+      $api_url = sprintf'http://%s:%s/api/v0/%%s?arg=%%s%%s',$apihost,$apiport;
+   }
+   my $url;
+   my $method = 'get';
+   my $data = undef;
+   if ($cmd =~ m/(?:add|write)$/) {
+      my $filename = shift;
+      $data = shift;
+      my $opt = join'',@_;
+      $url = sprintf $api_url,$cmd,$filename,$opt; # name of type="file"
+   } else {
+     $url = sprintf $api_url,$cmd,@_; # failed -w flag !
+   }
+   printf "X-api-url: %s\n",$url if $dbug;
+   use LWP::UserAgent qw();
+   use MIME::Base64 qw(decode_base64);
+   my $ua = LWP::UserAgent->new();
+   if ($api_url =~ m/blockringtm\.ml/) {
+      my $realm='Restricted Content';
+      my $auth64 = &get_auth();
+      my ($user,$pass) = split':',&decode_base64($auth64);
+      $ua->credentials('ipfs.blockringtm.ml:443', $realm, $user, $pass);
+#     printf "X-Creds: %s:%s\n",$ua->credentials('ipfs.blockringtm.ml:443', $realm);
+   }
+   my $content = '5xx';
+   if (defined $data) {
+      my $form = [ 'file' => "$data" ];
+      $resp = $ua->post($url,$form, 'Content-Type' => "multipart/form-data;boundary=immutable-file-boundary-$$");
+   } else {
+     $resp = $ua->get($url);
+   }
+   if ($resp->is_success) {
+      printf "X-Status: %s\n",$resp->status_line if $dbug;
+      $content = $resp->decoded_content;
+   } else { # error ... 
+      print "[33m";
+      printf "X-api-url: %s\n",$url;
+      print "[31m";
+      printf "Status: %s\n",$resp->status_line;
+      $content = $resp->decoded_content;
+      local $/ = "\n";
+      chomp($content);
+      print "[32m";
+      printf "Content: %s\n",$content;
+      print "[0m";
+   }
+   if ($content =~ m/^{/) { # }
+      use JSON qw(decode_json);
+      my $json = &decode_json($content);
+      #printf "json: %s.\n",Dump($json) if $dbug;
+      return $json;
+   } else { 
+      return $content;
+   }
+}
+# -----------------------------------------------------
+sub get_apihostport {
+  my $IPFS_PATH = $ENV{IPFS_PATH} || $ENV{HOME}.'/.ipfs';
+  my $conff = $IPFS_PATH . '/config';
+  local *CFG; open CFG,'<',$conff or warn $!;
+  local $/ = undef; my $buf = <CFG>; close CFG;
+  use JSON qw(decode_json);
+  my $json = decode_json($buf);
+  my $apiaddr = $json->{Addresses}{API};
+  my (undef,undef,$apihost,undef,$apiport) = split'/',$apiaddr,5;
+      $apihost = '127.0.0.1' if ($apihost eq '0.0.0.0');
+  return ($apihost,$apiport);
+}
+# -----------------------------------------------------
+sub get_auth {
+  my $auth = '*';
+  my $ASKPASS;
+  if (exists $ENV{IPMS_ASKPASS}) {
+    $ASKPASS=$ENV{IPMS_ASKPASS}
+  } elsif (exists $ENV{SSH_ASKPASS}) {
+    $ASKPASS=$ENV{SSH_ASKPASS}
+  } elsif (exists $ENV{GIT_ASKPASS}) {
+    $ASKPASS=$ENV{GIT_ASKPASS}
+  }
+  if ($ASKPASS) { 
+     use MIME::Base64 qw(encode_base64);
+     local *X; open X, sprintf"%s %s %s|",${ASKPASS},'blockRing™';
+     local $/ = undef; my $pass = <X>; close X;
+     $auth = encode_base64(sprintf('michelc:%s',$pass),'');
+     return $auth;
+  } elsif (exists $ENV{AUTH}) {
+     return $ENV{AUTH};
+  } else {
+    return 'YW5vbnltb3VzOnBhc3N3b3JkCg==';
+  }
+}
 # -----------------------------------------------------
 sub fname { # extract filename etc...
   my $f = shift;

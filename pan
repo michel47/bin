@@ -1,11 +1,16 @@
 #
 
 # publish a note ...
-qmset='QmXgazJVyNRBy8U26WGYbnM5X16wMNoGp4WJrBPWQHR2U1'
+qmset='QmX9Qkdj5PmmzpHtdEHeiGHBiKBKmQzZXRjB9ivMyf5X8p'
 dir=pan11248;
 if ! test -d $dir; then
 ipfs get $qmset -o $dir
 fi
+cp -p $0 $dir/pan
+if test -d .git; then
+git add $dir/pan
+fi
+
 file="$1"
 bname=${file%.*}
 perl -S moustache.pl $dir/default.html $dir/default.htm~
@@ -14,13 +19,15 @@ pandoc -t html -f markdown --template=$dir/default.htm~ -o $bname.htm~ $bname.md
 cp -p $bname.md~ $dir/$bname.md
 cp -p $bname.htm~ $dir/index.html
 qm=$(ipfs add -Q -r $dir)
+echo "- $qm" >> $dir/pan.yml
+qmlive=$(ipfs add -Q -r $dir)
 
-echo http://127.0.0.1:8080/ipfs/$qm
-echo http://yoogle.com:8080/ipfs/$qm
-echo https://cloudflare-ipfs.com/ipfs/$qm
-echo https://ipfs.blockringtm.ml/ipfs/$qm
+echo http://127.0.0.1:8080/ipfs/$qmlive
+echo http://yoogle.com:8080/ipfs/$qmlive
+echo https://cloudflare-ipfs.com/ipfs/$qmlive
+echo https://ipfs.blockringtm.ml/ipfs/$qmlive
 xdg-open $dir/index.html
 #curl -I https://ipfs.blockringtm.ml/ipfs/$qm &
-sleep 1; rm -rf $dir/
-#rm $bname.*~
+#sleep 1; rm -rf $dir/
+rm $bname.*~
 
