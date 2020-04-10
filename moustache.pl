@@ -291,13 +291,12 @@ sub extract_yml {
    my $yml = '';
    while (<F>) {
      tr/\r//d;
-      if (/^---\s(?:#.*)?$/) {
-         $isyml = 1;
-      }
       if ($isyml == 1) {
          print "DBUG> $_" if $dbug;
          $yml .= $_;
          if (/^[\.\-]{3}$/) { $isyml = 0; }
+      } elsif (m/^---\s(?:#.*)?$/) {
+         $isyml = 1;
       }
    }
    close F;
