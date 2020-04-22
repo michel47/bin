@@ -295,7 +295,7 @@ sub extract_yml {
          print "DBUG> $_" if $dbug;
          $yml .= $_;
          if (/^[\.\-]{3}$/) { $isyml = 0; }
-      } elsif (m/^---\s(?:#.*)?$/) {
+      } elsif (m/^---\s(?:#.*)?$/) { # might be buggy when --- inside yml separators...
          $isyml = 1;
       }
    }
