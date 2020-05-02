@@ -18,10 +18,10 @@ if [ "x$REPO" != "x" ]; then
 if test -d /media/IPFS/$REPO; then
   export IPFS_PATH=/media/IPFS/$REPO
   #GW=$(ipfs --offline config show | xjson Addresses.Gateway) # need API running
-  GW=$(cat $HOME/.ipfs/config | xjson Addresses.Gateway)
+  GW=$(cat $IPFS_PATH/config | xjson Addresses.Gateway)
   pp=$(echo $GW|cut -d'/' -f5)
   #name=$(ipfs --offline id | xjson ID | fullname)
-  name=$(cat $HOME/.ipfs/config | xjson Identity.PeerID | fullname)
+  name=$(cat $IPFS_PATH/config | xjson Identity.PeerID | fullname)
   echo env IPFS_PATH=${green}/media/IPFS/$REPO${reset} ipfs daemon
   OPTIONS="--unrestricted-api --enable-namesys-pubsub"
   rxvt -geometry 128x18 -bg black -fg lightyellow -name IPFS -n "$pp" -title "ipfs daemon:$pp ($REPO) ~ $name" -e ipfs daemon $OPTIONS &

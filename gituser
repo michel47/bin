@@ -12,10 +12,24 @@ echo domain: $domain
 #d=$(expr $tic % $3 )
 #domain=${domains[$d]}
 
-qm=$(ipfs add -Q -r -n . )
+toplevel=$(git rev-parse --show-toplevel)
+gitdir=$(git rev-parse --git-dir)
+prefix=$(git rev-parse --show-prefix)
+remote=$(git remote get-url origin)
+
+prev=$(ipfs add -Q -w $gitdir/config )
+qm=$(ipfs add -Q -w -r . )
+
 eval $(perl -S fullname.pl -a $qm | eyml)
+remote=$(echo $remote | sed -e "s/git@.*\.github\.com:/git@$user.github.com:/");
+echo remote: $remote
+
+
 git config user.name "$fullname"
 git config user.email $user@$domain
+git remote set-url origin $remote
+git config ipfs.qm $qm
+git config ipfs.prev $prev
 
 echo "gituser: $(git config user.name) <$(git config user.email)>"
 
