@@ -18,16 +18,18 @@ prefix=$(git rev-parse --show-prefix)
 remote=$(git remote get-url origin)
 
 prev=$(ipfs add -Q -w $gitdir/config )
-qm=$(ipfs add -Q -w -r . )
+qm=$(ipfs add -Q -n -w -r . )
 
 eval $(perl -S fullname.pl -a $qm | eyml)
-remote=$(echo $remote | sed -e "s/git@.*\.github\.com:/git@$user.github.com:/");
-echo remote: $remote
+if echo $remote | grep -p '\.github\.com:' 1>/dev/null;  then 
+  remote=$(echo $remote | sed -e "s/git@.*\.github\.com:/git@$user.github.com:/");
+  echo remote: $remote
+  git remote set-url origin $remote
+fir
 
 
 git config user.name "$fullname"
 git config user.email $user@$domain
-git remote set-url origin $remote
 git config ipfs.qm $qm
 git config ipfs.prev $prev
 
