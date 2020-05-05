@@ -1,11 +1,70 @@
 #!/usr/bin/env perl
 
+our $dbug=0;
+#--------------------------------
+# -- Options parsing ...
+#
+my $all = 0;
+while (@ARGV && $ARGV[0] =~ m/^-/)
+{
+  $_ = shift;
+  #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
+  if (/^-a(?:ll)?/) { $all= 1; }
+  elsif (/^-v(?:ersion)?/) { $veronly= 1; }
+  elsif (/^-g(?:it)?/) { $git= 1; }
+  elsif (/^-b(?:uild)?/) { $build= 1; }
+  elsif (/^-t(?:ime)?/) { $time= 1; }
+  elsif (/^-y(?:ml)?/) { $yml= 1; }
+  else                  { die "Unrecognized switch: $_\n"; }
+
+}
+#--------------------------------
+#understand variable=value on the command line...
+eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
+
 my $file = shift || __FILE__;
 my @ver = &version($file);
-printf "file: %s\n",$file;
-printf qq'version: "%.2f - %s"\n',@ver;
 my ($m,$r) = &rev(time);
-printf qq'scheduled: "v%.1f.%d" # (%s+%s)\n',int($m/10)/10,$m%10+$r,$m,$r;
+my $hdr = sprintf "blob %u\0",(lstat($file))[7]; # GIT header
+my $commitid = &get_khash('SHA1',$hdr,$file);
+my $gitid = substr(unpack('H*',$commitid),0,7);
+
+
+if ($all) {
+   printf "file: %s\n",$file;
+   printf qq'gitid: %s\n',$gitid;
+   printf qq'version: "%.2f - %s"\n',@ver;
+   printf qq'scheduled: "v%.1f.%d" # (%s+%s)\n',int($m/10)/10,$m%10+$r,$m,$r;
+} elsif ($yml) {
+   printf "--- # %s\n",$0;
+   printf "gitid: %s\n",$gitid;
+   printf "file: %s\n",$file;
+   printf "ver: %.2f\n",$ver[0];
+   printf "build: %s\n",$ver[1];
+   printf "minor: %s\n",$m;
+   printf "major: %s\n",$r;
+   printf "sched: %.1f.%d\n",int($m/10)/10,$m%10+$r;
+   printf qq'vtag: "%.2f - %s"\n',@ver;
+   print "...\n"
+
+} else {
+  my @res = ();
+  if ($time) {
+    push @res, sprintf 'v%.1f.%d',int($m/10)/10,$m%10+$r;
+  }
+  if ($veronly) {
+     push @res, sprintf '%.2f',$ver[0];
+  }
+  if ($git) {
+     push @res, $gitid;
+  }
+  if ($build) {
+     push @res, $ver[1];
+  }
+  my $sep = (scalar@res > 2) ? ', ' : ' - ';
+  print join$sep,@res;
+  
+}
 exit $?;
 
 # -----------------------------------------------------------------------
@@ -86,6 +145,28 @@ sub get_shake { # use shake 256 because of ipfs' minimal length of 20Bytes
   return $digest;
 }
 # -----------------------------------------------------------------------
-
+sub get_khash {
+   use Crypt::Digest qw();
+   my $alg = shift;
+   my $file = pop;
+   my $data = join'',@_;
+  local *F; open F,$file or do { warn qq{"$file": $!}; return undef };
+  #binmode F unless $file =~ m/\.txt/;
+  my $msg = Crypt::Digest::new($alg);
+     $msg->add($data);
+     $msg->addfile(*F);
+   my $hash = $msg->digest();
+   return $hash;
+}
+# -----------------------------------------------------------------------
+sub hash1 { # keyed hash
+   use Crypt::Digest qw();
+   my $alg = shift;
+   my $data = join'',@_;
+   my $msg = Crypt::Digest->new($alg) or die $!;
+      $msg->add($data);
+   my $hash = $msg->digest();
+   return $hash;
+}
 # -----------------------------------------------------------------------
 1;
