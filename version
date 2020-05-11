@@ -5,6 +5,7 @@ our $dbug=0;
 # -- Options parsing ...
 #
 my $all = 0;
+my $veronly = 0;
 while (@ARGV && $ARGV[0] =~ m/^-/)
 {
   $_ = shift;
@@ -13,6 +14,7 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
   elsif (/^-v(?:ersion)?/) { $veronly= 1; }
   elsif (/^-g(?:it)?/) { $git= 1; }
   elsif (/^-b(?:uild)?/) { $build= 1; }
+  elsif (/^-ta?g/) { $veronly= 1; $build= 1; }
   elsif (/^-t(?:ime)?/) { $time= 1; }
   elsif (/^-y(?:ml)?/) { $yml= 1; }
   else                  { die "Unrecognized switch: $_\n"; }

@@ -8,9 +8,9 @@ find . -name "*.*~*" -delete
 gitid=$(git rev-parse --short HEAD)
 
 tic=$(date +%s)
-ver=$(version $0 | xyml scheduled)
+ver=$(perl -S version -a $0 | xyml scheduled)
 echo ver: $ver
-qm=$(ipfs add -Q -r -n . )
+qm=$(ipfs --offline add -Q -r -n . )
 eval $(perl -S fullname.pl -a $qm | eyml)
 git config user.name "$fullname"
 git config user.email $user@healthium.gq

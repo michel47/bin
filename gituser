@@ -15,17 +15,23 @@ echo domain: $domain
 toplevel=$(git rev-parse --show-toplevel)
 gitdir=$(git rev-parse --git-dir)
 prefix=$(git rev-parse --show-prefix)
-remote=$(git remote get-url origin)
 
-prev=$(ipfs add -Q -w $gitdir/config )
-qm=$(ipfs add -Q -n -w -r . )
+#prev=$(ipfs add -Q -w $gitdir/config )
+prev=$(git config ipfs.qm)
+qm=$(ipfs add -Q -n -w -r $gitdir/config . )
 
 eval $(perl -S fullname.pl -a $qm | eyml)
-if echo $remote | grep -p '\.github\.com:' 1>/dev/null;  then 
-  remote=$(echo $remote | sed -e "s/git@.*\.github\.com:/git@$user.github.com:/");
-  echo remote: $remote
+
+if git remote get-url origin 2>/dev/null | grep -q -e '\.github\.com:' 1>/dev/null;  then 
+  remote=$(git remote get-url origin | sed -e "s/git@.*\.github\.com:/git@$user.github.com:/");
+  echo remote.origin: $remote
   git remote set-url origin $remote
-fir
+fi
+if git remote get-url github 2>/dev/null | grep -q -e '\.github\.com:' 1>/dev/null;  then 
+  remote=$(git remote get-url github | sed -e "s/git@.*\.github\.com:/git@$user.github.com:/");
+  echo github: $remote
+  git remote set-url github $remote
+fi
 
 
 git config user.name "$fullname"

@@ -139,6 +139,11 @@ fi
 echo "url: https://web.archive.org/web/*_/http://$w32.ipfs.dweb.link/"
 fi
 
+curl -s -I https://cloudflare-ipfs.com/ipfs/$b58f/ 2>/dev/null | grep -i -e x-ipfs -e x-cache -e etag &
+curl -s -I https://ipfs.2read.net/ipfs/$b58f/$name 2>/dev/null | grep -i x-ipfs &
+curl -s -I $static/gateway.ipfs.io/ipfs/$b64u/$name 2>/dev/null | grep x-ipfs &
+curl -s -I "${save}https://ipfs.blockringtm.ml/ipfs/$qm58" 2>/dev/null &
+
 # vim: nospell
 
 

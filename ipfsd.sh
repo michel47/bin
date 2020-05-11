@@ -10,8 +10,8 @@ REPO="$1"
  #export PATH=$HOME/bin:$PATH
 #fi
 
-qm=$(echo "IPFS is active" | ipfs add --offline -Q) && echo "qm: $qm"
-qm=$(echo "IPFS is active" | ipfs add -n -Q --hash id)
+qm=$(echo "IPFS is active" | ipfs add --offline -Q 2>/dev/null) && echo "qm: $qm"
+qm=$(echo "IPFS is active" | ipfs add -n -Q --hash id) || qm='bafkqad2jkbdfgidjomqgcy3unf3gkcq'
 # ------------------------------------------------------
 if [ "x$REPO" != "x" ]; then
 
@@ -20,8 +20,8 @@ if test -d /media/IPFS/$REPO; then
   #GW=$(ipfs --offline config show | xjson Addresses.Gateway) # need API running
   GW=$(cat $IPFS_PATH/config | xjson Addresses.Gateway)
   pp=$(echo $GW|cut -d'/' -f5)
-  #name=$(ipfs --offline id | xjson ID | fullname)
-  name=$(cat $IPFS_PATH/config | xjson Identity.PeerID | fullname)
+  #name=$(ipfs --offline id | xjson ID | perl -S fullname.pl)
+  name=$(cat $IPFS_PATH/config | xjson Identity.PeerID | perl -S fullname.pl)
   echo env IPFS_PATH=${green}/media/IPFS/$REPO${reset} ipfs daemon
   OPTIONS="--unrestricted-api --enable-namesys-pubsub"
   rxvt -geometry 128x18 -bg black -fg lightyellow -name IPFS -n "$pp" -title "ipfs daemon:$pp ($REPO) ~ $name" -e ipfs daemon $OPTIONS &
@@ -40,8 +40,8 @@ unset IPFS_PATH
 IPFS_PATH=$HOME/.ipfs
 GW=$(cat $IPFS_PATH/config | xjson Addresses.Gateway)
 pp=$(echo $GW|cut -d'/' -f5)
-#name=$(ipfs --offline id | xjson ID | fullname)
-name=$(cat $IPFS_PATH/config | xjson Identity.PeerID | fullname)
+#name=$(ipfs --offline id | xjson ID | perl -S fullname.pl)
+name=$(cat $IPFS_PATH/config | xjson Identity.PeerID | perl -S fullname.pl)
 # -------------------
 if curl -s -S -I http://127.0.0.1:$pp/ipfs/$qm | grep -q X-Ipfs-Path; then
   echo ${green}$name running$reset on port:$pp
@@ -73,8 +73,8 @@ else
 fi
 GW=$(cat $IPFS_PATH/config | xjson Addresses.Gateway)
 pp=$(echo $GW|cut -d'/' -f5)
-#name=$(ipfs --offline id | xjson ID | fullname)
-name=$(cat $IPFS_PATH/config | xjson Identity.PeerID | fullname)
+#name=$(ipfs --offline id | xjson ID | perl -S fullname.pl)
+name=$(cat $IPFS_PATH/config | xjson Identity.PeerID | perl -S fullname.pl)
 # -------------------
 if curl -s -I http://127.0.0.1:$pp/ipfs/$qm | grep -q X-Ipfs-Path; then
 echo ${green}$name running${reset} on port:$pp

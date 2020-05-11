@@ -1,44 +1,93 @@
 #!/usr/bin/env perl
 #
-# take a contain an return a 32bit key and more
+# take a content and return a 32bit key and more
 #
 use Digest::MurmurHash qw(); # Austin Appleby (Murmur 32-bit)
-printf "--- # %s\n",$0;
+our $dbug=0;
+#--------------------------------
+# -- Options parsing ...
+#
+my $all = 0;
+my $_id7 = 1;
+while (@ARGV && $ARGV[0] =~ m/^-/)
+{
+  $_ = shift;
+  #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
+  if (/^-a(?:ll)?/) { $all= 1; }
+  elsif (/^-y(?:ml)?/) { $yaml= 1; }
+
+  elsif (/^-m(?:u)?/) { $_mu= 1; }
+  elsif (/^-g(?:it)?/) { $_git= 1; }
+  elsif (/^-(?:i(?:d)?|7)/) { $_id7= 1; }
+  elsif (/^-(?:m(?:d6)?|6)/) { $_md6= 1; }
+  elsif (/^-(?:m(?:d)?|5)/) { $_md5= 1; }
+  elsif (/^-(?:n2|2)/) { $_n2= 1; }
+  elsif (/^-p(?:n)?/) { $_pn= 1; }
+  elsif (/^-w(?:ord)?/) { $_word= 1; }
+  elsif (/^-l(?:oc)?/) { $_loc= 1; }
+  else                  { die "Unrecognized switch: $_\n"; }
+
+}
+#--------------------------------
+#understand variable=value on the command line...
+eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
+
 my $key=shift;
+my $loc='stdin';
 if (-e $key) {
+ $loc=$key;
  local *F; open F,'<',$key;
  local $/ = undef; $key = <F>; close F;
 }
 my $mu = Digest::MurmurHash::murmur_hash($key);
-printf "mu: %u\n",$mu;
 
 my $gitbin = &githash($key);
 my $gitid = unpack('H*',$gitbin);
-printf "gitid: %s\n",$gitid;
 my $id7 = substr($gitid,0,7);
-printf "id7: %s\n",$id7;
 
-my $md5 = &digest('MD5',$key);
-printf "md5: %s\n",unpack('H*',$md5);
+my $md5 = unpack'H*',&digest('MD5',$key);
 my $sha1 = &digest('SHA1',$key);
-printf "sha1: %s\n",unpack('H*',$sha1);
 my $sha2 = &digest('SHA-256',$key);
 my $qm58 = &encode_base58("\x01\x55\x12\x20",$sha2);
-printf "qm58: z%s\n",$qm58;
 my $md6bin = &digest('MD6',$key);
 my $md6 = unpack('H*',$md6bin);
-printf "md6: %s\n",$md6;
-
-
 
 my $nu = hex($id7);
 my $pn = hex(substr($md6,-4)); # 16-bit
-printf "pn: %s\n",$pn;
 my $word = &word($pn);
-printf "word: %s\n",$word;
 my $n2 = sprintf "%09u",$nu; $n2 =~ s/(....)/\1_/;
-printf "n2: %s\n",$n2;
 
+printf "--- # %s\n",$0 if ($yaml);
+
+if ($yaml || $all) {
+printf "mu: %u\n",$mu;
+printf "gitid: %s\n",$gitid;
+printf "id7: %s\n",$id7;
+printf "md5: %s\n",unpack('H*',$md5);
+printf "sha1: %s\n",unpack('H*',$sha1);
+printf "qm58: z%s\n",$qm58;
+printf "md6: %s\n",$md6;
+printf "pn: %s\n",$pn;
+printf "word: %s\n",$word;
+printf "n2: %s\n",$n2;
+printf "loc: %s\n",$loc;
+} else {
+  my @res = ();
+  if ($_mu == 1) { push @res, $mu }
+  push @res, $gitid if $_git;
+  push @res, $id7 if $_id7;
+  push @res, $md5 if $_md5;
+  push @res, $sha1 if $_sha1;
+  push @res, $qm58 if $_qm58;
+  push @res, $md6 if $_md6;
+  push @res, $pn if $_pn;
+  push @res, $word if $_word;
+  push @res, $n2 if $_n2;
+
+  my $sep = (scalar@res > 2) ? ', ' : ' - ';
+  print join$sep,@res;
+
+}
 
 exit $?;
 

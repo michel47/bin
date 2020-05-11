@@ -229,6 +229,7 @@ sub varint {
 sub get_gwhostport {
   my $IPFS_PATH = $ENV{IPFS_PATH} || $ENV{HOME}.'/.ipfs';
   my $conff = $IPFS_PATH . '/config';
+  printf "\/\/ config: %s\n",$conff if $dbug;
   local *CFG; open CFG,'<',$conff or warn $!;
   local $/ = undef; my $buf = <CFG>; close CFG;
   use JSON qw(decode_json);
@@ -237,12 +238,23 @@ sub get_gwhostport {
   my (undef,undef,$gwhost,undef,$gwport) = split'/',$gwaddr,5;
       $gwhost = '127.0.0.1' if ($gwhost eq '0.0.0.0');
   my $url = sprintf'http://%s:%s/ipfs/zz38RTafUtxY',$gwhost,$gwport;
+  printf "try: http://%s:%s/ipfs/zz38RTafUtxY\n",$gwhost,$gwport if $dbug;
   my $ua = LWP::UserAgent->new();
   my $resp = $ua->get($url);
   if ($resp->is_success) {
     return ($gwhost,$gwport);
-  } else {
-    return ('ipfs.blockringtm.ml',443);
+  } else { #do a second attempt 
+    my $ua = LWP::UserAgent->new();
+    $gwhost = 'localhost';
+    $gwport = 8080;
+    my $url = sprintf'http://%s:%s/ipfs/zz38RTafUtxY',$gwhost,$gwport;
+    printf "try-again: http://%s:%s/ipfs/zz38RTafUtxY\n",$gwhost,$gwport if $dbug;
+    $resp = $ua->get($url);
+    if ($resp->is_success) {
+      return ($gwhost,$gwport);
+    } else {
+      return ('ipfs.blockringtm.ml',443);
+    }
   }
 }
 # -----------------------------------------------------------------------

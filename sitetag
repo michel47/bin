@@ -32,11 +32,14 @@ mkdir -p $MUTDIR
 fi
 if test ! -e $MUTDIR/$symb.log; then
 cat > $MUTDIR/$symb.log <<EOF
---- # tags for sites (seo)
+--- # tags for sites discovery (seo)
 EOF
 fi
 qm=$($ipfs add -Q $MUTDIR/$symb.log)
 fi
+# get port from api config 
+addr=$(ipfs config Addresses.API)
+apiport=${addr##*/}
 
 # preparing new stag
 tics=$(date +%s)
@@ -44,6 +47,8 @@ tics=$(date +%s)
 ip=$(curl -s http://dyn℠.ml/cgi-bin/remote_addr.pl | head -1)
 ip=${ip:-0.0.0.0}
 echo $tics: $ip,$qm,$kw >> $MUTDIR/$symb.log
+echo logf: $MUTDIR/$symb.log
+echo $tics: $ip,$qm,$kw
 
 # create a key if needed
 if $ipfs key list | grep -q -w $symb; then
@@ -51,15 +56,16 @@ key=$($ipfs key list -l | grep -w $symb | cut -d' ' -f 1)
 else
 key=$($ipfs key gen -t rsa -s 3072 $symb) 
 fi
-echo "key: $key"
+echo "key: $key # ($symb)"
 # publishing mutable
 qm=$($ipfs add -Q $MUTDIR/$symb.log)
-echo "qm: $qm"
+echo "qm: $qm # ($symb.log)"
 $ipfs --offline name publish --allow-offline --key=$symb /ipfs/$qm > /dev/null
 
 # filing and signing mutable
 if $ipfs files rm /my/etc/mutables/$symb.log; then true; fi
 $ipfs files cp /ipfs/$qm /my/etc/mutables/$symb.log
+echo url: http://localhost:$apiport/webui/#file/my/etc/mutables/$symb.log
 # create mutable key if necessary ...
 if $ipfs key list | grep -q -w 'mutables'; then
 mut=$($ipfs key list -l | grep -w 'mutables'| cut -d' ' -f 1)
@@ -70,6 +76,7 @@ fi
 # signing ...
 mt=$($ipfs files stat --hash /my/etc/mutables)
 echo url: https://gateway.ipfs.io/ipfs/$mt/$symb.log
+curl -s -I https://gateway.ipfs.io/ipfs/$mt/$symb.log 1>/dev/null 2>&1
 $ipfs --offline name publish --allow-offline --key=mutables /ipfs/$mt > /dev/null
 echo url: https://gateway.ipfs.io/ipns/$mut/$symb.log
 
