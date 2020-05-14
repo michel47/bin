@@ -227,6 +227,8 @@ sub varint {
 }
 # -----------------------------------------------------------------------
 sub get_gwhostport {
+  our $gwhost,$gwport;
+  if (defined $gwport) { return ($gwhost,$gwport); }
   my $IPFS_PATH = $ENV{IPFS_PATH} || $ENV{HOME}.'/.ipfs';
   my $conff = $IPFS_PATH . '/config';
   printf "\/\/ config: %s\n",$conff if $dbug;
@@ -235,7 +237,7 @@ sub get_gwhostport {
   use JSON qw(decode_json);
   my $json = decode_json($buf);
   my $gwaddr = $json->{Addresses}{Gateway};
-  my (undef,undef,$gwhost,undef,$gwport) = split'/',$gwaddr,5;
+     (undef,undef,$gwhost,undef,$gwport) = split'/',$gwaddr,5;
       $gwhost = '127.0.0.1' if ($gwhost eq '0.0.0.0');
   my $url = sprintf'http://%s:%s/ipfs/zz38RTafUtxY',$gwhost,$gwport;
   printf "try: http://%s:%s/ipfs/zz38RTafUtxY\n",$gwhost,$gwport if $dbug;
@@ -253,6 +255,7 @@ sub get_gwhostport {
     if ($resp->is_success) {
       return ($gwhost,$gwport);
     } else {
+      printf STDERR 'info: using ipfs.blockringtm.ml:443',"\n";
       return ('ipfs.blockringtm.ml',443);
     }
   }
