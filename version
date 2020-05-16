@@ -5,19 +5,21 @@ our $dbug=0;
 # -- Options parsing ...
 #
 my $all = 0;
-my $veronly = 0;
+my $veronly = 1;
 while (@ARGV && $ARGV[0] =~ m/^-/)
 {
   $_ = shift;
   #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
-  if (/^-a(?:ll)?/) { $all= 1; }
-  elsif (/^-v(?:ersion)?/) { $veronly= 1; }
-  elsif (/^-g(?:it)?/) { $git= 1; }
-  elsif (/^-b(?:uild)?/) { $build= 1; }
-  elsif (/^-ta?g/) { $veronly= 1; $build= 1; }
-  elsif (/^-t(?:ime)?/) { $time= 1; }
-  elsif (/^-y(?:ml)?/) { $yml= 1; }
-  else                  { die "Unrecognized switch: $_\n"; }
+  if (/^-a(?:ll)?/)         { $all= 1; }
+  elsif (/^-v(?:ersion)?/)  { $veronly= 1; }
+  else { $veronly= 0;
+     if (/^-g(?:it)?/)      { $git= 1; }
+     elsif (/^-b(?:uild)?/) { $build= 1; }
+     elsif (/^-ta?g/)       { $veronly= 1; $build= 1; }
+     elsif (/^-t(?:ime)?/)  { $time= 1; }
+     elsif (/^-y(?:ml)?/)   { $yml= 1; }
+     else                   { die "Unrecognized switch: $_\n"; }
+  }
 
 }
 #--------------------------------
