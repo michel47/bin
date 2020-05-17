@@ -78,7 +78,7 @@ printf "bafy: B%s\n",$bafy;
 printf "mu: %u\n",$mu;
 printf "gitid: %s\n",$gitid;
 printf "id7: %s\n",$id7;
-printf "md5: %s\n",unpack('H*',$md5);
+printf "md5: %s\n",$md5;
 printf "sha1: %s\n",unpack('H*',$sha1);
 printf "zb58: z%s\n",$zb58;
 printf "md6: %s\n",$md6;
@@ -207,9 +207,10 @@ sub hash1 { # keyed hash
 # ---------------------------------------------------------
 sub githash {
  use Digest::SHA1 qw();
+ my $blob = join'',@_;
  my $msg = Digest::SHA1->new() or die $!;
-    $msg->add(sprintf "blob %u\0",(lstat(F))[7]);
-    $msg->add(@_);
+    $msg->add(sprintf "blob %u\0",length($blob));
+    $msg->add($blob);
  my $digest = $msg->digest();
  return $digest; # binay form !
 }

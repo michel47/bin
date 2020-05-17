@@ -1,5 +1,8 @@
 #
 
+# git commit and push
+domain='healthium.gq'
+
 if echo $0 | grep -q '/'; then
 export PATH=${0%/*}:$PATH
 fi
@@ -13,7 +16,7 @@ echo ver: $ver
 qm=$(ipfs --offline add -Q -r -n . )
 eval $(perl -S fullname.pl -a $qm | eyml)
 git config user.name "$fullname"
-git config user.email $user@healthium.gq
+git config user.email $user@$domain
 echo "gituser: $(git config user.name) <$(git config user.email)>"
 tag=$(echo -n "$user@gradual.gq" | ipfs add -Q --raw-leaves --hash id --cid-base=base58btc)
 

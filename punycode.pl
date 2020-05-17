@@ -6,11 +6,11 @@ use Encode::Punycode;
 while (<STDIN>) {
  my $ans = decode('utf8',$_);
  chomp($ans);
-if ($ans =~ m/xn--([^\.]*)/) {
+if ($ans =~ m/xn--([\w\-]*)/) {
   my $unicode = decode('Punycode',$1);
   my $puny = $ans; $puny =~ s/xn--$1/$unicode/;
   printf "puny: %s\n",$puny;
-} elsif ($ans =~ m/([^\.]*)/) {
+} elsif ($ans =~ m/([\w\-]*)/) {
  my $unicode = "$1";
  print "// ";
  &xxd($unicode);

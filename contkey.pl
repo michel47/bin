@@ -63,7 +63,7 @@ if ($yaml || $all) {
 printf "mu: %u\n",$mu;
 printf "gitid: %s\n",$gitid;
 printf "id7: %s\n",$id7;
-printf "md5: %s\n",unpack('H*',$md5);
+printf "md5: %s\n",$md5;
 printf "sha1: %s\n",unpack('H*',$sha1);
 printf "qm58: z%s\n",$qm58;
 printf "md6: %s\n",$md6;

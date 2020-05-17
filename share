@@ -3,19 +3,33 @@
 file=$1
 fname=${1##*/}
 date=$(date)
+tic=$(date +%s)
 dir=share11248
 if [ ! -e $dir ]; then mkdir $dir; fi
+if [ ! -e $dir/media ]; then mkdir $dir/media; fi
 
 sed -i -e "s/date: \".*\"/date: \"$date\"/" $file
 perl -S moustache.pl -o $dir/$fname $file
 pandoc $dir/$fname -s -f markdown -t html -o $dir/index.html
 qm=$(ipfs add -Q -w -r $file $0 $dir)
 echo url: http://yoogle.com:8080/ipfs/$qm/share11248
-youtub-dl http://yoogle.com:8080/ipfs/$qm/share11248
-xdg-open https://127.0.0.1:8080/ipfs/$qm/share11248
-curl -I https://gateway.ipfs.io/ipfs/$qm | grep x-ipfs
-curl -I https://dweb.link/ipfs/$qm | grep x-ipfs
-curl -I https://ipfs.blockringtm.ml/ipfs/$qm | grep x-ipfs
-curl -I https://ipfs.2read.com/ipfs/$qm | grep x-ipfs
-curl -I https://siderus.io/ipfs/$qm/share11248 | grep x-ipfs
-curl -I https://cloudflare-ipfs.com/ipfs/$qm/share11248 | grep -e x-ipfs -e cache-status
+(cd $dir/media/ && youtube-dl -o "video5.%(ext)s" http://yoogle.com:8080/ipfs/$qm/share11248)
+#mv *.mp4 $dir/media/
+#video=$dir/media/*.mp4
+#rm $dir/media/video5.mp4
+#ln $dir/media/$video $dir/media/video5.mp4
+qmvid=$(ipfs add -Q -w -r $dir/media/video5.mp4)
+sed -i -e "s/^qm: .*/qm: $qm/" -e "s/^qmvid: .*/qmvid: $qmvid/" $file
+perl -S moustache.pl -o $dir/$fname $file
+pandoc $dir/$fname -s -f markdown -t html -o $dir/index.html
+qm=$(ipfs add -Q -w -r $file $0 $dir qm.log)
+echo $tic: $qm >> qm.log
+
+xdg-open http://127.0.0.1:8080/ipfs/$qm/share11248/media
+
+curl -s -I https://gateway.ipfs.io/ipfs/$qm | grep x-ipfs
+curl -s -I https://dweb.link/ipfs/$qm | grep x-ipfs
+curl -s -I https://ipfs.blockringtm.ml/ipfs/$qm | grep x-ipfs
+curl -s -I https://ipfs.2read.com/ipfs/$qm | grep x-ipfs
+curl -s -I https://siderus.io/ipfs/$qm/share11248 | grep x-ipfs
+curl -s -I https://cloudflare-ipfs.com/ipfs/$qm/share11248 | grep -e x-ipfs -e cache-status
