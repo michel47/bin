@@ -2,7 +2,10 @@
 
 # publish a note ...
 qmset='QmZkPjvYBxgNZeKCXZxFj5GBrSB7TUfNDHL8FnnzQXYWDU'
-dir=_11248;
+dir=11248
+if [ -e _site ]; then
+  dir=_$dir
+fi
 if ! test -d $dir; then
 ipfs get $qmset -o $dir
 fi

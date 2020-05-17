@@ -71,6 +71,7 @@ if (defined $outfile) { # passed as -o option
 my $yml = &extract_yml($file);
 $yml->{QM} = $qm;
 $yml->{QMID} = substr($qm,0,7);
+$yml->{SHORTQM} = substr($qm,0,7).'...'.substr($qm,-6);
 if ($dbug) {
 my $ymlf = $target; $ymlf =~ s/\.[^\.]+$//; $ymlf .= '.yml.txt';
 use YAML::Syck qw(DumpFile); DumpFile($ymlf,$yml);
