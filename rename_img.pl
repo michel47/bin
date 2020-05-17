@@ -4,7 +4,7 @@
 # The secret ingredient is always love ...
 
 my $root;
-if (@ARGC) {
+if (@ARGV) {
   $root = shift
 } else {
  use Cwd qw();
