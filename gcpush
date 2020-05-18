@@ -4,8 +4,17 @@
 domain='healthium.gq'
 
 if echo $0 | grep -q '/'; then
+# adding bindir in path
 export PATH=${0%/*}:$PATH
 fi
+
+# if ∃ argument cd to parent and do a git add w/ $*
+if [ "x$1" != 'x' ]; then
+  cd ${1%/*}
+  echo pwd: $(pwd -P)
+  git add $*
+fi
+
 find . -name "*.*~*" -delete
 
 gitid=$(git rev-parse --short HEAD)
@@ -13,6 +22,7 @@ gitid=$(git rev-parse --short HEAD)
 tic=$(date +%s)
 ver=$(perl -S version -a $0 | xyml scheduled)
 echo ver: $ver
+
 qm=$(ipfs --offline add -Q -r -n . )
 eval $(perl -S fullname.pl -a $qm | eyml)
 git config user.name "$fullname"

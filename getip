@@ -1,7 +1,7 @@
 #
 
 ip=$(curl --connect-timeout 1 -s http://dyn℠.ml/cgi-bin/remote_addr.pl)
-if [ "$ip" == 'x' ]; then
+if [ "x$ip" == 'x' ]; then
 ip=$(curl -s https://postman-echo.com/ip?format=text)
 fi
 echo $ip
