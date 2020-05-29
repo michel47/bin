@@ -18,6 +18,9 @@ prefix=$(git rev-parse --show-prefix)
 
 #prev=$(ipfs add -Q -w $gitdir/config )
 prev=$(git config ipfs.qm)
+if [ "x$IPFS_PATH" != 'x' ]; then
+echo  IPFS_PATH: $IPFS_PATH
+fi
 qm=$(ipfs add -Q -n -w -r $gitdir/config . )
 
 eval $(perl -S fullname.pl -a $qm | eyml)

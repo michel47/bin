@@ -56,7 +56,7 @@ echo "file: $assetsdir/$aname"
 ls -l $assetsdir/$aname
 #exit 0; # problem with cname.pl & eyml
 
-eval $(perl -S cname.pl $assetsdir/$aname | eyml)
+eval $(perl -S cname.pl $assetsdir/$aname | tee cname.log | eyml)
 #cname=$(cname $assetsdir/$aname | grep cname: | cut -d' ' -f 2)
 #
 echo wid: $wid

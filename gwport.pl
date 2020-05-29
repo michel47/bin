@@ -17,6 +17,7 @@ sub get_gwhostport {
   my (undef,undef,$gwhost,undef,$gwport) = split'/',$gwaddr,5;
       $gwhost = '127.0.0.1' if ($gwhost eq '0.0.0.0');
   my $url = sprintf'http://%s:%s/ipfs/zz38RTafUtxY',$gwhost,$gwport;
+  printf "testing: %s\n",$url;
   use LWP::UserAgent qw();;
   my $ua = LWP::UserAgent->new();
   my $resp = $ua->get($url);

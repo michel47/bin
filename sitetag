@@ -8,6 +8,8 @@
 #  whete tag is an email address for instance
 
 if which ipms 1>/dev/null; then ipfs=ipms; else ipfs=ipfs; fi
+ipfs=$(which ipfs) # tempo fix w/ 0.5.1
+$ipfs --version | sed -e s/ipfs/ipfs:/
 MUTDIR=${MUTDIR:-$HOME/etc/mutables}
 
 symb=sitetags
@@ -18,7 +20,7 @@ else
 tag="$*"
 fi
 echo "tag: $tag"
-kw=$(echo -n "$tag" | $ipfs add -Q --raw-leaves --hash id --cid-base=base58btc)
+kw=$(echo -n "$tag" | $ipfs add -Q --raw-leaves --hash identity --cid-base=base58btc)
 echo "kw: $kw"
 # getting previous file
 if qm=$($ipfs files stat --hash /my/etc/mutables/$symb.log); then
@@ -76,7 +78,7 @@ fi
 # signing ...
 mt=$($ipfs files stat --hash /my/etc/mutables)
 echo url: https://gateway.ipfs.io/ipfs/$mt/$symb.log
-curl -s -I https://gateway.ipfs.io/ipfs/$mt/$symb.log 1>/dev/null 2>&1
+#curl -s -I https://gateway.ipfs.io/ipfs/$mt/$symb.log 1>/dev/null 2>&1
 $ipfs --offline name publish --allow-offline --key=mutables /ipfs/$mt > /dev/null
 echo url: https://gateway.ipfs.io/ipns/$mut/$symb.log
 

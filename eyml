@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 
+my $yml = {};
+
 use YAML::Syck qw(Load Dump);
 if (0) {
    my $file = shift;
@@ -29,22 +31,29 @@ if (@ARGV) {
    }
 } else {
 
-   foreach (sort keys %$yml) {
-      my $value = $yml->{$_};
-      if ($_ =~ m/\-/) {
-        $_ =~ s/^(.)/\u\1/;
-        $_ =~ s/-(.)/\u\1/g;
+   if (ref($yml) eq 'HASH') {
+      foreach (sort keys %$yml) {
+         my $value = $yml->{$_};
+         if ($_ =~ m/\-/) {
+            $_ =~ s/^(.)/\u\1/;
+            $_ =~ s/-(.)/\u\1/g;
+         }
+         $value =~ s/\`/\\x60/g; # /!\ make it safe
+            if ($value =~ m/\$/) {
+               $value =~ s/'/\\x27/g;
+               printf "%s='%s';\n",$_,$value;
+            } else {
+               $value =~ s/"/\\x22/g;
+               printf qq'%s="%s";\n',$_,$value;
+            }
+
       }
-      $value =~ s/\`/\\x60/g; # /!\ make it safe
-      if ($value =~ m/\$/) {
-         $value =~ s/'/\\x27/g;
-         printf "%s='%s';\n",$_,$value;
-      } else {
-         $value =~ s/"/\\x22/g;
-         printf qq'%s="%s";\n',$_,$value;
+   } elsif(ref($yml) eq 'ARRAY') {
+       my $i = 0;
+      foreach (sort @$yml) {
+         printf qq'%s="%s";\n',$i++,$_;
       }
-      
-   }
+   } 
 
 }
 
