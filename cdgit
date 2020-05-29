@@ -1,0 +1,13 @@
+#
+
+set -e
+for last in "$@"; do true; done
+if echo "$last" | grep -q -e '^/'; then
+if test -e $last; then
+  dir=${last%/*}
+  \cd $dir
+  echo "cd $(pwd -P); git $*"
+fi
+fi
+
+/usr/bin/git $*

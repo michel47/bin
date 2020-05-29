@@ -62,7 +62,7 @@ printf "sha2: f%s\n",unpack('H*',$bindata) if $dbug;
 }
 # ----------------------------------------------------------------
 our $wordlists;
-my $qmDICT = 'QmNYxFBCcUKEmjLF578pCKvrFHDfYdTtwZaLm8byBhFVHG';
+my $qmDICT = 'QmT3CaqFDZWQb2aNYCHMRQYLVEHS2Z5huDFQBoTYnHoSm8';
 #y $etcdir = __FILE__; $etcdir =~ s,/bin/\w+$,/etc,;
 #y $DICT = (exists $ENV{DICT}) ? $ENV{DICT} : $etcdir; # '/usr/share/dict';
 #rintf "// DICT=%s\n",$DICT if $dbug;
