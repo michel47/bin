@@ -1,21 +1,43 @@
 #
 
-set healthium.gq chii.ml keysm.ml gradual.gq bigtm.gq blockringtm.gq bringtm.ml clockchain.tk csap.ml current-see.ml dids.ml evolutiontm.tk gatetm.tk gcfs.ml gctm.gq gctm.ml glog.gq happycoin.gq happycoin.cf hellodoc.tk hltm.ml
+set healthium.gq chii.ml kintm.gq holosphere.gq keysm.ml gradual.gq bigtm.gq blockringtm.gq bringtm.ml clockchain.tk csap.ml current-see.ml dids.ml evolutiontm.tk gatetm.tk gcfs.ml gctm.gq gctm.ml glog.gq happycoin.gq happycoin.cf hellodoc.tk hltm.ml
 tic=$(date +"%s")
 d=$(expr \( $tic % $# \) + 1)
-#echo d:$d
-domain=$(eval echo \$$d)
-#echo domain: $domain
+echo d:$d
+domain=$(eval echo \${$d})
+echo domain: $domain
 
 # bash only
 #domains=(healthium.gq chii.ml keysm.ml)
 #d=$(expr $tic % $3 )
 #domain=${domains[$d]}
 
-qm=$(ipfs add -Q -r -n . )
+toplevel=$(git rev-parse --show-toplevel)
+gitdir=$(git rev-parse --git-dir)
+prefix=$(git rev-parse --show-prefix)
+
+#prev=$(ipfs add -Q -w $gitdir/config )
+prev=$(git config ipfs.qm)
+qm=$(ipfs add -Q -n -w -r $gitdir/config . )
+
 eval $(perl -S fullname.pl -a $qm | eyml)
+
+if git remote get-url origin 2>/dev/null | grep -q -e '\.github\.com:' 1>/dev/null;  then 
+  remote=$(git remote get-url origin | sed -e "s/git@.*\.github\.com:/git@$user.github.com:/");
+  echo remote.origin: $remote
+  git remote set-url origin $remote
+fi
+if git remote get-url github 2>/dev/null | grep -q -e '\.github\.com:' 1>/dev/null;  then 
+  remote=$(git remote get-url github | sed -e "s/git@.*\.github\.com:/git@$user.github.com:/");
+  echo github: $remote
+  git remote set-url github $remote
+fi
+
+
 git config user.name "$fullname"
 git config user.email $user@$domain
+git config ipfs.qm $qm
+git config ipfs.prev $prev
 
 echo "gituser: $(git config user.name) <$(git config user.email)>"
 

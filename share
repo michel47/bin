@@ -1,0 +1,21 @@
+#
+
+file=$1
+fname=${1##*/}
+date=$(date)
+dir=share11248
+if [ ! -e $dir ]; then mkdir $dir; fi
+
+sed -i -e "s/date: \".*\"/date: \"$date\"/" $file
+perl -S moustache.pl -o $dir/$fname $file
+pandoc $dir/$fname -s -f markdown -t html -o $dir/index.html
+qm=$(ipfs add -Q -w -r $file $0 $dir)
+echo url: http://yoogle.com:8080/ipfs/$qm/share11248
+youtub-dl http://yoogle.com:8080/ipfs/$qm/share11248
+xdg-open https://127.0.0.1:8080/ipfs/$qm/share11248
+curl -I https://gateway.ipfs.io/ipfs/$qm | grep x-ipfs
+curl -I https://dweb.link/ipfs/$qm | grep x-ipfs
+curl -I https://ipfs.blockringtm.ml/ipfs/$qm | grep x-ipfs
+curl -I https://ipfs.2read.com/ipfs/$qm | grep x-ipfs
+curl -I https://siderus.io/ipfs/$qm/share11248 | grep x-ipfs
+curl -I https://cloudflare-ipfs.com/ipfs/$qm/share11248 | grep -e x-ipfs -e cache-status

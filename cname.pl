@@ -20,6 +20,7 @@
 # vi MANIFEST (comment inc/Devel/CheckLib line)
 # perl -Mlocal::lib=${PERL5LIB%/lib/perl5} Makefile.PL
 
+
 use lib $ENV{SITE}.'/lib';
 use YAML::Syck qw(Dump);
 use UTIL qw(digest shake version encode_base42 encode_base58f encode_base58 encode_basen word5 word fname etime get_type get_ext rev fdow);
@@ -28,6 +29,10 @@ use IPFS qw(ipfsapi);
 #printf "INC: \n\t%s\n",join"\n\t",@INC; exit $?;
 
 our $dbug = 0;
+#understand variable=value on the command line...
+eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
+
+# caching dir...
 my $cachedir = "$ENV{HOME}/var/cache";
 mkdir "$ENV{HOME}/var" unless -d "$ENV{HOME}/var";
 mkdir $cachedir unless -d $cachedir;
@@ -221,13 +226,20 @@ sub file {
  my $f = $p .'/'. $n;
  print "cname-file: $qm $f\n" if $dbug;
  my $mh = &ipfsapi('files/stat',$p,'&hash=1'); # test directory 
+ if ($dbug && ! exists $mh->{Code}) {
+     printf "info: dir p=%s exists\n",$p;
+ }
  if (exists $mh->{Code}) {
+   print "ipfs-api-files: mkdir $p\n" if $dbug;
    my $mh = &ipfsapi('files/mkdir',$p,'&parents=1&cid-version=0'); # create it if necessary
    if (exists $mh->{Code}) { printf "%s: %d -- %s: %s\n",$mh->{Type},$mh->{Code},$p,$mh->{Message}; }
- } else {
-   print "ipfs-api-files: rm $f\n" if $dbug;
-   my $mh = &ipfsapi('files/rm',$f,'&recursive=0');
-   if (exists $mh->{Code}) { printf "%s: %d -- %s: %s\n",$mh->{Type},$mh->{Code},$f,$mh->{Message}; }
+ } else { # dir $p exists
+   my $mh = &ipfsapi('files/stat',$f,'&hash=1'); # test directory 
+   if (! exists $mh->{Code}) {
+      print "ipfs-api-files: rm $f\n" if $dbug;
+      my $mh = &ipfsapi('files/rm',$f,'&recursive=0');
+      if ($dbug && exists $mh->{Code}) { printf "%s: %d -- %s: %s\n",$mh->{Type},$mh->{Code},$f,$mh->{Message}; }
+   }
  }
  my $mh = &ipfsapi('files/cp',"/ipfs/$qm",'&arg='.$f);
    print "ipfs-api-files: cp /ipfs/$qm $f\n" if $dbug;

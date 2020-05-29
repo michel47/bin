@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+
+# @(#) What, program resurrected for #KIN Planetary OS
+
+# What support Unicode !!
+# vim: set encoding=utf-8
+# 
+# note: encode: add the "codepoint" to the character
+#       decode: remove the "codepoint" to the character
+#
+#  it is a little bit like using a colormap in an image !
+
+$dbug = 0;
+
+use Encode;
+use open qw(:std :encoding(utf8));
+#binmode(STDIN,':utf8');
+#binmode(STDOUT,':utf8');
+
+# 0xf09f8c8d
+my $ws = decode_utf8 "@(🌐) what: display the special string @(#) !";
+my $upat = "\x{1F30D}\x{1F30F}\x{1F30E}\x{1F310}";
+   $upat = decode_utf8('🌍🌏🌎🌐');
+if (0 || $dbug) {
+
+   printf "//dbug: encoded: %s\n",unpack'H*',&encode_utf8($upat);
+   printf "//dbug: upat: %s = %s\n",$upat,unpack'H*',$upat;
+   #exit;
+
+}
+
+
+
+local $/ = "\n";
+while (<>) {
+ # ----------------------------------------------------------------------
+ #binmode(ARGV,':utf8');
+ if (m/\@\(([#$upat])\)(.*?)[\0"\n]/) { # if file is open :utf8
+   printf qq'@(%s)%s\n',$1,$2;
+ }
+ # ----------------------------------------------------------------------
+ printf "//dbug: \x{2661} %s",$_ if $dbug && m/\x{2661}/;
+ printf "// \\xe299a1 %s",decode_utf8($_) if m/\xe2\x99\xa1/;
+
+}
+if (1) {
+   binmode(DATA,':utf8');
+   my $data = <DATA>;
+   if ($data !~ m/\x{2661}/) {
+     print $data,"\n";
+     die $?;
+   }
+}
+
+# @(🌍) this is the EU what-string
+
+1; # $Source: $
+__DATA__
+made w/ ♡ by IGL for KIN
