@@ -1,6 +1,9 @@
 #
 
-
+if echo "$1" | grep -q 'https*:/'; then
+  url="$1"
+  shift
+fi
 tag="$*"
 export IPFS_PATH=${IPFS_PATH:-/media/IPFS/MEDIA}
 store=${IPFS_PATH}/filestore
@@ -9,6 +12,8 @@ cd $store
 echo "--- # $0"
 echo "tag: \"$tag\""
 echo "store: \"$store\""
+
+if [ "x$url" = 'x' ]; then
 browser=" - Brave"
 #wmctrl -a $browser
 
@@ -26,6 +31,7 @@ xdotool key "ctrl+a"
 #xdotool Click 3
 xdotool key "ctrl+c"
 url=$(clipit -c)
+fi
 echo "URL: $url"
 echo $url >> /media/IPFS/MEDIA/filestore/yturls.txt
 
@@ -46,9 +52,9 @@ echo id7: $id7
 if echo $url | grep -q -i "v=.*"; then
  vid=$(perl -e 'if ("'$url'" =~ m/v=([-\w]+)/) { print $1; }')
 else if echo $url | grep -q "youtu.be/.*"; then
- vid=$(perl -e 'if ("'$url'" =~ m/\.be/([-\w]+)/) { print $1; }')
+ vid=$(perl -e 'if ("'$url'" =~ m,\.be/([-\w]+),) { print $1; }')
 else if echo $url | grep -q "bitchute.com/video/.*"; then
- vid=$(perl -e 'if ("'$url'" =~ m/bitchute.com/([-\w]+)/) { print $1; }')
+ vid=$(perl -e 'if ("'$url'" =~ m,bitchute.com/([-\w]+),) { print $1; }')
 fi
 fi
 fi

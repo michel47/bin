@@ -1,0 +1,135 @@
+#!/usr/bin/perl
+BEGIN {my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,0,$p):'.'}#for SITE.pm
+
+# vim: nospell
+#
+# log any "one-line message" ...
+#
+# TBD have an option not to file to IPFS is node is down
+
+# ------------------------------------------------------
+my $symb='log';
+my $desc='World Log System';
+my $metaf = $ENV{HOME}."/.brings/logs/$symb-meta.yml";
+my $file = $ENV{HOME}."/.brings/logs/$symb.md";
+my $idsf = $ENV{HOME}."/.brings/logs/${symb}-ids.yml";
+# ------------------------------------------------------
+my $SYMB = uc $symb;
+my $TAG = $SYMB; $TAG =~ y/AEIOUY//d; $TAG= substr($TAG,0,3);
+
+use lib $bindir;
+use SITE qw();
+use UTIL qw(hashr);
+use IPFS qw(ipfsrun decode_base58 encode_base32);
+use YAML::Syck qw(LoadFile DumpFile);
+
+our $batch = 0;
+#--------------------------------
+# -- Options parsing ...
+#
+while (@ARGV && $ARGV[0] =~ m/^-/)
+{
+  $_ = shift;
+  #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
+  if (/^-v(?:erbose)?/) { $verbose= 1; }
+  elsif (/^-q(?:uiet)?/) { $quiet=1; }
+  elsif (/^-b(?:atch)?/) { $batch=1; }
+  else                  { die "Unrecognized switch: $_\n"; }
+
+}
+#understand variable=value on the command line...
+eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
+
+
+our $ids = {}; # command identifier (3 letters + 
+if (-e $idsf) {
+  $ids = LoadFile($idsf);
+}
+
+my $buf = undef;
+   $buf = join(' ',@ARGV) if (@ARGV);
+#print "a:%u\n",scalar @ARGV;
+#print qq' "%s" \n',$buf;
+
+# --------------------
+my $tic = $^T;
+my ($min,$hour,$mday,$mon,$yr,$yday) = (localtime($tic))[1..5,7];
+my $yr4 = $yr + 1900;
+my $yhour = $yday * 24 + $hour + ($min / 60 + $sec / 3600);
+my $nto = 60 * $yhour / 29;
+printf "%d/%02d %02d:%02d # %ut\n",$mon+1,$mday,$hour,$min,$nto;
+# --------------------
+local *F; open F,'>>',$file;
+
+if (! defined $buf) {
+   $buf = <STDIN>; chomp($buf);
+}
+# format:
+#   [tag:] <op> <args> (comments)
+my ($tag,$op,$argv) = ($1||$TAG,$2,$3) if ($buf =~ m/(?:(\w+):\s*)?(\S+)\s*(.*)\s*$/);
+my $what = $argv; $what =~ s/\s+\([^)]+\)\s*$//; # comment are removed from the id3
+my $id3 = &hashid3($tag,$op,$what);
+
+printf F qq'%d. %s: %s %s #%s %d/%02d %02d:%02d %s\n',$nto,$tag,$op,$argv,$tid3, $mon+1,$mday,$hour,$min;
+close F;
+DumpFile($idsf,$ids);
+
+printf "file://%s\n",$file;
+if (! $batch) {
+#system "gvim --servername $SYMB --remote-wait $file";
+#system "vim --servername $SYMB --remote-wait $file";
+system "vim $file";
+#system "gvim $file";
+}
+# ---------------
+my $PGW='https://ipfs.blockringtm.ml';
+#  $PGW='https://cloudflare-ipfs.com';
+my $hash0='z83ajReAEg1SfNCAXGksPDMgNEW7YUN7J';
+my $prev = (-f $metaf) ? LoadFile($metaf)->{wrap} : $hash0;
+my $mh = &ipfsrun("add -w --cid-base=base58btc --trickle --progress=false $file $idsf");
+delete $mh->{'hash'}; delete $mh->{''}; $mh->{prev} = $prev;
+DumpFile($metaf,$mh);
+my $zh58 = &ipfsrun("add --cid-base=base58btc --raw-leaves --progress=false $metaf")->{hash};
+printf "%s/ipfs/%s\n",$PGW,$zh58;
+# ---------------
+exit $?;
+
+# -----------------------------------------------------------
+sub hashid3 {
+   my $data = shift;
+   my $i = 0;
+   my $buf = $data . ' #'. $i++;
+   my $mhash = &mhash($buf);
+   my $mh32= &encode_base32($mhash);
+   my $name3 = substr($mh32,6,3);
+   while($ids->{$name3}) {
+      $buf = $data . ' #'.$i;
+      my $mhash = &mhash($buf);
+      my $mh32= &encode_base32($mhash);
+      $name3 = substr($mh32,6,3);
+      $i++;
+   }
+   $ids->{$name3} = $buf;
+   return $name3;
+}
+# -----------------------------------------------------------
+sub loadFile {
+  my $file = shift;
+  return [] unless -f $file;
+  local *F;
+  local $/ = "\n";
+  open F,'<',$file;
+  my $buf = [ grep !m{^%}, <F> ];
+  close F;
+  return $buf;
+}
+# -----------------------------------------------------------
+
+sub mhash { # SHA1 mhash ...
+  my $msg = shift;
+  my $hash = &hashr('SHA1',1,$msg);
+  return pack('H*','01551114').$hash;
+}
+# -----------------------------------------------------------
+
+1; # $Source: /my/perl/scripts/mkseeding.pl,v $
