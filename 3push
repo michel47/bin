@@ -1,6 +1,6 @@
 #
 
-push framagit source
-#push framagit perso
-push gitlab source
-push github source
+git push framagit source
+#git push framagit perso
+git push gitlab source
+git push github source
