@@ -24,9 +24,12 @@ ver=$(perl -S version -a $0 | xyml scheduled)
 echo ver: $ver
 
 qm=$(ipfs --offline add -Q -r -n . )
+if git config user.name | grep -q michel; then
+user=michelc
 eval $(perl -S fullname.pl -a $qm | eyml)
 git config user.name "$fullname"
 git config user.email $user@$domain
+fi
 echo "gituser: $(git config user.name) <$(git config user.email)>"
 tag=$(echo -n "$user@gradual.gq" | ipfs add -Q --raw-leaves --hash id --cid-base=base58btc)
 

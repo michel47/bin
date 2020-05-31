@@ -54,6 +54,7 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
     $mail = 1,        next if $arg =~ m/^-m(?:ail)?$/;
     $log = 1,        next if $arg =~ m/^-l(?:og)?$/;
     $id = 1,         next if $arg =~ m/^-i(?:d)?$/i;
+    $rcs = $1 ? "$1" : shift || 'file.txt', next if $arg =~ m/^-r(?:cs)?+(\.*)?$/;
     $cvs = 1,        next if $arg =~ m/^-c(?:vs)?$/;
     $http = 1,        next if $arg =~ m/^-h(?:ttp|tml?)?$/;
     $tag= $1 ? "t$1" : shift || 'tag', next if $arg =~ m/^-t(\w+)?$/;
@@ -139,6 +140,8 @@ sub affiche {
    my $period = $dim * 24; # 8765.81277 / 12;
    $rev_id = int($yweek) <<2;
    $low_id = int(($wday+($hour/24)+$min/(24*60))*4/6); # frequency : 4/6
+   my $revision = ($rev_id + $low_id) / 100;
+   my $version = sprintf '%.1f.%d',int($rev_id/10)/10,$rev_id%10+$low_id;
   if ($tag =~ /t(\d+)$/o) {
     $f=int(0.99999-log($1/3600)/log(10));
     $d=4+$f+1;
@@ -235,8 +238,11 @@ sub affiche {
   } elsif ($id) {
     printf "ID:%4s\n",
          &base36(int($yhour/$_1yr * 36**4)), # 18 sec accuracy
+  } elsif ($rcs) {
+    printf qq'# \$Id: %s,v %s %-4d-%d-%02d %-2d:%02d:%02d %s Exp \$\n',
+     $rcs, $version,$year+1900,$mon+1,$mday,$hour,$min,$sec,$ENV{USER};
   } elsif ($what) {
-    printf "# %s %d%s @(%s) %s : %-2d-%s-%02d (%s) %-2d:%02d:%02d - WW%2d [%s]\n",
+    printf "# %s %d%s @(%s) %s : %-02d-%s-%02d (%s) %-2d:%02d:%02d - WW%2d [%s]\n",
      $what,$yhour, chr(ord('a')+$low_id),'#',$ORG,
      $mday,$MoY[$mon],$year%100,$MSGID,
      $hour,$min,$sec,
