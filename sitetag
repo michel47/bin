@@ -21,6 +21,10 @@ tag="$*"
 fi
 echo "tag: $tag"
 kw=$(echo -n "$tag" | $ipfs add -Q --raw-leaves --hash identity --cid-base=base58btc)
+kw35=$(echo $kw | cut -c-35)
+if [ "$kw" != "$kw35" ]; then
+  echo "kw35: $kw35"
+fi
 echo "kw: $kw"
 # getting previous file
 if qm=$($ipfs files stat --hash /my/etc/mutables/$symb.log); then
