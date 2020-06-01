@@ -14,7 +14,16 @@ my $yml = Load($buf);
 my $LF = ($#ARGV > 0) ? "\n" : '';
 if (@ARGV) {
 foreach (@ARGV) {
-  if (ref($yml->{$_}) eq 'HASH') {
+  my $p = rindex($_,'.');
+  my $key=substr($_,0,$p);
+  my $subkey=substr($_,$p+1);
+  #printf "key: %s\n",$key;
+  #printf "subkey: %s\n",$subkey; exit;
+  if (ref($yml->{$key}) eq 'ARRAY') {
+    print $yml->{$key}[$subkey],$LF;
+  } elsif (ref($yml->{$key}) eq 'HASH') {
+    print $yml->{$key}{$subkey},$LF;
+  } elsif (ref($yml->{$_}) eq 'HASH') {
     print Dump($yml->{$_}),$LF;
   } else {
     print $yml->{$_},$LF;

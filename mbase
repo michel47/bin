@@ -86,7 +86,7 @@ print "--- # other encoding for z.$qm\n";
 printf "qm: %s\n",$qm;
 printf "quint: %s\n",$quint;
 printf "b10: 9%s\n",$b10;
-printf "b12: f%s\n",$b12;
+printf "b12: E%s\n",$b12;
 printf "b16: f%s\n",$b16;
 printf "b32: B%s\n",$b32;
 printf "b32z: h%s\n",lc$b32z;
@@ -153,17 +153,39 @@ sub decode_base10 {
 }
 # --------------------------------------------
 sub encode_base12 {
- # to a base24 and then ...?
- # TODO: 
- $e =~ y/0-9:;/0-9XE/;
- return scalar reverse $e;
+  use Math::BigInt;
+  my $bin = join'',@_;
+  my $n = Math::BigInt->from_bytes($bin);
+  my $e = '';
+  while ($n->bcmp(0) == +1)  {
+    my $c = Math::BigInt->new();
+    ($n,$c) = $n->bdiv(12);
+    $e .= chr(0x30 + $c->numify); # 0x30: 0 included
+  }
+  $e =~ y/0-9:;/0-9XE/;
+  return scalar reverse $e;
 }
+# ---
 sub decode_base12 {
-  my $s = $_[0];
-  $s =~ y/ATXBE/AAABB/;
-  $s =~ y/0-9AB/0-9:;/;
- # from a base24 and then ?
- # TODO:
+  use Math::BigInt;
+  my ($s) = @_;
+  #        012345.0123456.012345678.01.01 012345.0123456.012345678.01.01
+  #$s =~ y/AIOTUX.BCDEFGH.JKLMNPQRS.VW.YZ/::::::.;;;;;;;.;;;;;;;;;.;;.;;/;
+  #       0123456789.0123456789A.012345678.01.01 0123456789.0123456789A.012345678.01.01
+  $s =~ y/AIOTUχδXτ↊.BCDEFGHƐℰε↋.JKLMNPQRS.VW.YZ/::::::::::.;;;;;;;;;;;.;;;;;;;;;.;;.;;/;
+
+  my $n = Math::BigInt->new(0);
+  my $j = Math::BigInt->new(1);
+  while($s ne '') {
+    my $c = substr($s,-1,1,''); # consume chr from the end !
+    my $i = ord($c);
+    my $w = $j->copy();
+       $w->bmul($i);
+    $n->badd($w);
+    $j->bmul(12);
+  }
+  my $d = $n->as_bytes();
+  return $d;
 }
 # --------------------------------------------
 sub encode_base32z {

@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+# $birth: $
+
 our $dbug=0;
 #--------------------------------
 # -- Options parsing ...
@@ -10,24 +12,27 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
 {
   $_ = shift;
   #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
-  if (/^-a(?:ll)?/)         { $all= 1; }
-  elsif (/^-v(?:ersion)?/)  { $veronly= 1; }
+  if (/^-v(?:ersion)?/)  { $veronly= 1; }
   else { $veronly= 0;
      if (/^-g(?:it)?/)      { $git= 1; }
+     elsif (/^-age?/) { $ageonly= 1; }
      elsif (/^-b(?:uild)?/) { $build= 1; }
      elsif (/^-ta?g/)       { $veronly= 1; $build= 1; }
      elsif (/^-t(?:ime)?/)  { $time= 1; }
      elsif (/^-y(?:ml)?/)   { $yml= 1; }
+     elsif (/^-a(?:ll)?/)   { $all= 1; }
      else                   { die "Unrecognized switch: $_\n"; }
   }
-
 }
 #--------------------------------
 #understand variable=value on the command line...
 eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
 
-my $file = shift || __FILE__;
+our $VERSION=&version(__FILE__);
+
+my $file = shift || $0;
 my @ver = &version($file);
+my $age = $ver[0];
 my ($m,$r) = &rev(time);
 my $hdr = sprintf "blob %u\0",(lstat($file))[7]; # GIT header
 my $commitid = &get_khash('SHA1',$hdr,$file);
@@ -37,33 +42,37 @@ my $gitid = substr(unpack('H*',$commitid),0,7);
 if ($all) {
    printf "file: %s\n",$file;
    printf qq'gitid: %s\n',$gitid;
-   printf qq'version: "%.2f - %s"\n',@ver;
-   printf qq'scheduled: "v%.1f.%d" # (%s+%s)\n',int($m/10)/10,$m%10+$r,$m,$r;
+   printf qq'version: "%d.%.2f - %s"\n',@ver;
+   printf qq'scheduled: "v%d.%.1f.%d" # (%s+%s)\n',int($age),int($m/10)/10,$m%10+$r,$m,$r;
 } elsif ($yml) {
-   printf "--- # %s\n",$0;
+   printf "--- # %s (%s)\n",$0,$VERSION;
    printf "gitid: %s\n",$gitid;
    printf "file: %s\n",$file;
-   printf "ver: %.2f\n",$ver[0];
-   printf "build: %s\n",$ver[1];
+   printf "age: %.2f\n",$ver[0];
+   printf "ver: %.2f\n",$ver[1];
+   printf "build: %s\n",$ver[2];
    printf "minor: %s\n",$m;
    printf "major: %s\n",$r;
    printf "sched: %.1f.%d\n",int($m/10)/10,$m%10+$r;
-   printf qq'vtag: "%.2f - %s"\n',@ver;
+   printf qq'vtag: "%d.%.2f - %s"\n',@ver;
    print "...\n"
 
 } else {
   my @res = ();
   if ($time) {
-    push @res, sprintf 'v%.1f.%d',int($m/10)/10,$m%10+$r;
+    push @res, sprintf 'v%d.%.1f.%d',int($age),int($m/10)/10,$m%10+$r;
   }
   if ($veronly) {
-     push @res, sprintf '%.2f',$ver[0];
+     push @res, sprintf '%d.%.2f',@ver[0,1];
+  }
+  if ($ageonly) {
+     push @res, $ver[0];
   }
   if ($git) {
      push @res, $gitid;
   }
   if ($build) {
-     push @res, $ver[1];
+     push @res, $ver[2];
   }
   my $sep = (scalar@res > 2) ? ', ' : ' - ';
   print join$sep,@res;
@@ -73,19 +82,81 @@ exit $?;
 
 # -----------------------------------------------------------------------
 sub version {
-  #y ($atime,$mtime,$ctime) = (lstat($_[0]))[8,9,10];
-  my @times = sort { $a <=> $b } (lstat($_[0]))[9,10]; # ctime,mtime
-  my $vtime = $times[-1]; # biggest time...
+  my $_1yrs = 365.25 * 24 * 3600;
+  my $birth = &get_birth($_[0]);
+  my @times = (lstat($_[0]))[8,9,10]; # atime, mtime,ctime
+  my $vtime = (sort { $a <=> $b } @times[1,2])[-1];
+  my ($etime,$ltime) = (sort { $a <=> $b } @times)[0,-1];
+  my $age = ( $ltime - $birth ) / $_1yrs;
   my $version = &rev($vtime);
+
 
   if (wantarray) {
      my $shk = &get_shake(160,$_[0]);
-     print "$_[0] : shk:$shk\n" if $dbug;
+     printf "%s : shk:f%s\n",$_[0],unpack'H*',$shk if $dbug;
      my $pn = unpack('n',substr($shk,-4)); # 16-bit
      my $build = &word($pn);
-     return ($version, $build);
+     return ($age, $version, $build);
   } else {
      return sprintf '%g',$version;
+  }
+}
+# -----------------------------------------------------------------------
+sub get_birth { # extract birth time from file
+  local *F; open F,'<',$_[0]; 
+  my $btic = 0;
+  while (<F>) {
+    if (m/\b\$?[bB]irth: (\d+)\$/) { $btic = $1; last; }
+  }
+  if ($btic == 0) { # try to see if there is a first git version ..
+    my ($fpath,$fname,undef,undef) = &fname($_[0]);
+    my $gitcmd = sprintf('git -C "%s" log --reverse --format="%%at" --all --full-history "%s"',$fpath,$fname);
+    printf "info: %s\n", $gitcmd if $dbug;
+    local *EXEC; open EXEC,"$gitcmd 2>/dev/null |" or warn $!;
+    local $/ = "\n";
+    $btic = <EXEC>; chomp($btic); close EXEC;
+
+  }
+  close F;
+  if (! $btic) {
+   $btic = (sort { $a <=> $b } (lstat($_[0]))[8,9,10])[0]; # smallest one !
+  }
+  printf "btic: %s\n",$btic if $dbug;
+  return $btic;
+}
+# -----------------------------------------------------------------------
+sub fname { # extract filename etc...
+  my $f = shift;
+  $f =~ s,\\,/,g; # *nix style !
+  my $s = rindex($f,'/');
+  my $fpath = '.';
+  if ($s > 0) {
+    $fpath = substr($f,0,$s);
+  } else {
+    use Cwd;
+    $fpath = Cwd::getcwd();
+  }
+  my $fname = substr($f,$s+1); # filename (basename) including extension
+  if (-d $f) {
+    return ($fpath,$fname);
+  } else {
+  my $rname; # rootname
+  my $ext; # extension
+  my $p = rindex($fname,'.');
+     $ext = lc substr($fname,$p+1);
+     $ext =~ s/\~$//;
+  if ($p > 0) {
+    $rname = substr($fname,0,$p);
+    $ext = lc substr($fname,$p+1);
+    $ext =~ s/\~$//;
+  } else {
+    $rname = $fname;
+    $ext = undef;
+  }
+  $rname =~ s/\s+\(\d+\)$//; # remove (1) in names ...
+
+  return ($fpath,$fname,$rname,$ext);
+
   }
 }
 # -----------------------------------------------------------------------

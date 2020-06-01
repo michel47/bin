@@ -29,6 +29,9 @@ user=michelc
 eval $(perl -S fullname.pl -a $qm | eyml)
 git config user.name "$fullname"
 git config user.email $user@$domain
+export GIT_COMMITTER_NAME="$fullname"
+export GIT_COMMITTER_EMAIL="$email"
+
 fi
 echo "gituser: $(git config user.name) <$(git config user.email)>"
 tag=$(echo -n "$user@gradual.gq" | ipfs add -Q --raw-leaves --hash id --cid-base=base58btc)
@@ -45,7 +48,8 @@ qm: $qm
 tag: $tag
 EOT
 echo "msg: $msg"  | sed -e '2,$s/^/  /'
-if git commit -m "$msg"; then
+
+if git commit -m "$msg" --author "$user <$user@gradual.gq>"; then
 gitid=$(git rev-parse HEAD)
 git tag -f -a $ver -m "tagging $gitid on $date"
 #echo gitid: ${gitid:0:9} # this is bash!

@@ -1,6 +1,6 @@
 #
 
-ip=$(curl --connect-timeout 1 -s http://dyn℠.ml/cgi-bin/remote_addr.pl)
+ip=$(curl --connect-timeout 1 --max-time 5 -s http://dyn℠.ml/cgi-bin/remote_addr.pl)
 if [ "x$ip" == 'x' ]; then
 ip=$(curl -s https://postman-echo.com/ip?format=text)
      log -b ISP "getip failed" 1>/dev/null

@@ -1,23 +1,25 @@
 #!/usr/bin/perl
-# $Id: moustache.pl,v 1.0 2018/09/03  9:43:16 iglake Exp $
+# $Id: moustache.pl,v 1.0 2020-05-21  9:43:16 michelc Exp $
 #-------------------------------------------------------
-#-- Iggy G. Lake                                      --
+#-- Michel G. Combes                                  --
 #--                                                   --
 #-- All contents copyright (C) 2018, 2019, 2020       --
 #-- All rights reserved                               --
-#-- contact: iggyl@one-♡.tk                           --
+#-- contact: michelc@michelium.ml                     --
 #--                                                   --
 #-------------------------------------------------------
 
-# moustache 7451c @(#) IPHuO : 7 -Nov-18 (IGLK) 11:53:57 - WW45 [c]
+# moustache 3645a @(#) MYC : 31-May-20 (MGCM) 21:12:32 - WW22 [a]
 #
 # Revision history :
+# . 3645~ : streamline the code : split instead of extract
 # . 7451~ : re-factored for pmd flow
 #
 # 1519026565 : Idea of moustashe preprocessor
 #
 our $dbug = 0;
 my ($red,$nc) = ('[31m','[0m');
+my @list = ();
 
 my $HOME = $ENV{HOME} || '/home/'.$ENV{USERNAME};
 #--------------------------------
@@ -28,6 +30,7 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
   $_ = shift;
   #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
   if (/^-v(?:erbose)?/) { $verbose= 1; }
+  elsif (/^-y([\w.]*)/) { push @list, $1 ? $1 : shift; }
   elsif (/^-o([\w.]*)/) { $outfile= $1 ? $1 : shift; }
   else                  { die "Unrecognized switch: $_\n"; }
 
@@ -66,9 +69,9 @@ if (defined $outfile) { # passed as -o option
   $target = $file; $target =~ s/\.$ext/.md/;
 }
 # -------------------------------------------------
-
-# 1) extract yaml data :
-my $yml = &extract_yml($file);
+# 1) split yaml from data ...
+my ($yml,$buf) = &split_yaml_from_data('page',$file);
+#
 $yml->{QM} = $qm;
 $yml->{QMID} = substr($qm,0,7);
 $yml->{SHORTQM} = substr($qm,0,7).'...'.substr($qm,-6);
@@ -153,11 +156,7 @@ $yml->{CHART} = 'https://chart.googleapis.com/chart?cht=qr&chs=222x222&choe=UTF-
 # FAVICONS 
 $yml->{FAVI} = 'https://www.google.com/s2/favicons?domain';
 
-# 2) read file
-local *S; open S,'<',$file;
-local $/ = undef; my $buf = <S>; close S;
-
-# 2a) flatten all include
+# 2) flatten all include
  $buf = &includes($buf);
 
 # 3) make substitution :
@@ -169,7 +168,6 @@ if ($s) {
 }
 
 # load include file too ...
-my @list = ();
 if (exists $yml->{moustache}) {
   if (ref $yml->{moustache} eq 'ARRAY') {
     push @list, @{$yml->{moustache}};
@@ -196,7 +194,8 @@ if (exists $yml->{moustache}) {
      }
      if (-e $y) {
         print " loading $y\n";
-        my $yml = &extract_yml($y);
+        my (undef,undef,$bname,$ext) = &fname($y);
+        my $yml = { $bname => &extract_yml($y) };
         my $s = &substi($yml,$buf);
         if ($s) { 
            $c += $s;
@@ -207,7 +206,7 @@ if (exists $yml->{moustache}) {
      }
   }
 
-my $keys = &get_keylist();
+my $keys = { keys => &get_keylist() };
 #foreach (grep !/ID$/, keys %$key) { $keys->{$_.'ID'} = $keys->{$_}; # keyname alias !  }
 my $s = &substi($keys,$buf);
 if ($s) {
@@ -268,20 +267,53 @@ sub substi { # inplace (buf) substitution ...
   my $bufref = \$_[0];
   my $c = 0;
   return unless (ref($yml) eq 'HASH');
-  foreach my $key (reverse sort keys %$yml) {
-    my $pat = $key;
-    $pat =~ s/-/\\-/g;
-    $pat =~ s/([()])/\\$1/g;
-    next if (ref $yml->{$key} eq 'ARRAY');
-    #printf "ref: %s\n",ref($yml->{$key});
-    #next unless (ref $yml->{$key} eq '');
-    my $value = $yml->{$key};
-    print "{{$pat}} -> $value\n" if ($$bufref =~ m/\{\{$pat\}\}/);
-    $c += $$bufref =~ s/\{\{$pat\}\}/$value/g;
+  foreach my $ns (sort keys %$yml) {
+    my $map = $yml->{$ns};
+    if (ref($map) eq 'HASH') {
+       foreach my $key (reverse sort keys %$map) {
+          if ($ns eq 'global') {
+            $pat = "$key";
+          } else {
+            $pat = "$ns\.$key";
+          }
+          $pat =~ s/-/\\-/g;
+          $pat =~ s/([()])/\\$1/g;
+          next if (ref $map->{$key} eq 'ARRAY');
+          #printf "ref: %s\n",ref($map->{$key});
+          #next unless (ref $map->{$key} eq '');
+          my $value = $map->{$key};
+          print "{{$pat}} -> $value\n" if ($$bufref =~ m/\{\{$pat\}\}/);
+          $c += $$bufref =~ s/\{\{$pat\}\}/$value/g;
+       }
+    }
   }
   return $c;
 }
 
+# -----------------------------------------------------
+sub split_yaml_from_data {
+   my $ns = shift;
+   my $file = shift;
+   die "! -e $file" if ! -e $file;
+   local *F; open F,'<',$file or die $!;
+   local $/ = "\n";
+   my $isyml = 0;
+   my $yml = '';
+   while (<F>) {
+      tr/\r//d; # *nix style eol !
+      if ($isyml == 1) {
+         if (/^([\w_\-\.]+):/ && defined $ns ) {
+            $yml .= $ns.'.'.$_;
+         } else {
+            $yml .= $_;
+         }
+         if (/^[\.\-]{3}$/) { $isyml = 0; }
+      } elsif (m/^---\s(?:#.*)?$/) { # might be buggy when --- inside yml separators...
+         $isyml = 1;
+      }
+   }
+   close F;
+}
 # -----------------------------------------------------
 sub extract_yml {
    my $file = shift;
