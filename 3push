@@ -1,6 +1,13 @@
 #
 
-git push framagit source
-#git push framagit perso
-git push gitlab source
-git push github source
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" = 'perso' ]; then
+git push framagit perso
+else
+echo // framagit:
+git push framagit $branch
+echo // gitlab:
+git push gitlab $branch
+echo // github:
+git push github $branch
+fi
