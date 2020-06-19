@@ -18,6 +18,7 @@ fi
 find . -name "*.*~*" -delete
 
 gitid=$(git rev-parse --short HEAD)
+branch=$(git rev-parse --abbrev-ref HEAD)
 
 tic=$(date +%s)
 ver=$(perl -S version -a $0 | xyml scheduled)
@@ -34,7 +35,7 @@ export GIT_COMMITTER_EMAIL="$email"
 
 fi
 echo "gituser: $(git config user.name) <$(git config user.email)>"
-tag=$(echo -n "$user@gradual.gq" | ipfs add -Q --raw-leaves --hash id --cid-base=base58btc)
+tag=$(echo -n "$user@gradual.gq" | ipfs add -Q --raw-leaves --hash identity --cid-base=base58btc)
 
 
 git diff HEAD .
@@ -64,7 +65,7 @@ git push --delete origin "$ver"
 fi
 fi
 echo "git push : "
-git push --follow-tags
+git push --follow-tags origin $branch
 echo .
 
 

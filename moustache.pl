@@ -71,10 +71,13 @@ if (defined $outfile) { # passed as -o option
 # -------------------------------------------------
 # 1) split yaml from data ...
 my ($yml,$buf) = &split_yaml_from_data('page',$file);
-#
-$yml->{QM} = $qm;
-$yml->{QMID} = substr($qm,0,7);
-$yml->{SHORTQM} = substr($qm,0,7).'...'.substr($qm,-6);
+
+my $global = {};
+$yml->{global} = $global;
+$global->{QM} = $qm;
+$global->{QMID} = substr($qm,0,7);
+$global->{SHORTQM} = substr($qm,0,7).'...'.substr($qm,-6);
+
 if ($dbug) {
 my $ymlf = $target; $ymlf =~ s/\.[^\.]+$//; $ymlf .= '.yml.txt';
 use YAML::Syck qw(DumpFile); DumpFile($ymlf,$yml);
@@ -82,68 +85,68 @@ use YAML::Syck qw(DumpFile); DumpFile($ymlf,$yml);
 
 printf "yml: %s.\n",Dump($yml) if $dbug;
 # DATE AND TIME
-$yml->{TICS} = $^T;
+$global->{TICS} = (lstat($file))[9] || $^T;
 ##     0    1     2     3    4     5     6     7
 #y ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday)
-my ($mon,$day,$yy) = (localtime($yml->{TICS}))[4,3,5];
+my ($mon,$day,$yy) = (localtime($global->{TICS}))[4,3,5];
 my $yr4 = $yy + 1900;
 my $LMoY = [qw( January February March April May June July August September October November December )];
-$yml->{DATE} = sprintf"%s %2d, %4d",$LMoY->[$mon],$day,$yr4;
-$yml->{HDATE} = &hdate($yml->{TICS});
-$yml->{PREVMONTH} = $LMoY->[($mon+11) % 12];
-$yml->{MONTH} = $LMoY->[$mon];
-$yml->{YR4} = $yr4;
-$yml->{YR2} = $yy % 100;
-$yml->{TODAY} = &hdate($^T);
+$global->{DATE} = sprintf"%s %2d, %4d",$LMoY->[$mon],$day,$yr4;
+$global->{HDATE} = &hdate($global->{TICS});
+$global->{TODAY} = &hdate($^T);
+$yml->{time}{PREVMONTH} = $LMoY->[($mon+11) % 12];
+$yml->{time}{MONTH} = $LMoY->[$mon];
+$yml->{time}{YR4} = $yr4;
+$yml->{time}{YR2} = $yy % 100;
 
 
 # DEFAULT SUBSTITUTION for YML substitution
-$yml->{WWW} = $ENV{WWW};
-$yml->{SEARCH} = 'https://seeks.hsbp.org/?language=en&engines=google,duckduckgo,qwant,ixquick,startpage&q';
-$yml->{SEARX} = 'https://ipfs.gc-bank.tk/ipns/searx.neocities.org/?q';
-$yml->{SEARXES} = 'https://searxes.danwin1210.me/?lg=en-US&search_this';
-$yml->{SIMIL} = 'http://www.google.com/searchbyimage?btnG=1&hl=en&image_url';
-$yml->{GOO} = 'http://google.com/search?bti=1&q';
-$yml->{DUCK} = 'http://duckduckgo.com/?q'; # <---
+$global->{WWW} = $ENV{WWW};
+$global->{SEARCH} = 'https://seeks.hsbp.org/?language=en&engines=google,duckduckgo,qwant,ixquick,startpage&q';
+$global->{SEARX} = 'https://ipfs.gc-bank.tk/ipns/searx.neocities.org/?q';
+$global->{SEARXES} = 'https://searxes.danwin1210.me/?lg=en-US&search_this';
+$global->{SIMIL} = 'http://www.google.com/searchbyimage?btnG=1&hl=en&image_url';
+$global->{GOO} = 'http://google.com/search?bti=1&q';
+$global->{DUCK} = 'http://duckduckgo.com/?q'; # <---
 
 
-$yml->{IPROXY} = 'http://ipns.co';
+$global->{IPROXY} = 'http://ipns.co';
 
-$yml->{GW} = 'http://gateway.ipfs.io';
-$yml->{ZGW} = 'http://0.0.0.0:8080';
-$yml->{GCGW} = 'http://ipfs.gc-bank.tk';
-$yml->{'2GGW'} = 'http://ipfs.2gether.cf';
-$yml->{IPH} = 'http://iph.heliohost.org/IPHS';
-$yml->{AHE} = 'http://iph.heliohost.org/AHE';
+$global->{GW} = 'http://gateway.ipfs.io';
+$global->{ZGW} = 'http://0.0.0.0:8080';
+$global->{GCGW} = 'http://ipfs.gc-bank.tk';
+$global->{'2GGW'} = 'http://ipfs.2gether.cf';
+$global->{IPH} = 'http://iph.heliohost.org/IPHS';
+$global->{AHE} = 'http://iph.heliohost.org/AHE';
 
-$yml->{HELIO} = 'http://iph.heliohost.org';
-$yml->{IPNS} = 'http://iph.heliohost.org/ipns';
-$yml->{IMAGES} = 'http://iph.heliohost.org/ipns/images';
+$global->{HELIO} = 'http://iph.heliohost.org';
+$global->{IPNS} = 'http://iph.heliohost.org/ipns';
+$global->{IMAGES} = 'http://iph.heliohost.org/ipns/images';
 
-$yml->{SAVE} = 'https://web.archive.org/save';
-$yml->{GT} = 'https://translate.google.com/translate?sl=auto&tl=en&js=y&prev=_t&hl=en&ie=UTF-8&u';
+$global->{SAVE} = 'https://web.archive.org/save';
+$global->{GT} = 'https://translate.google.com/translate?sl=auto&tl=en&js=y&prev=_t&hl=en&ie=UTF-8&u';
 
 
 # Symbols
-$yml->{'TM'} = '&trade;';
-$yml->{'SM'} = '&#8480;';
-$yml->{'<3'} = '&#9825;';
-$yml->{':)'} = '&#9786;';
+$global->{'TM'} = '&trade;';
+$global->{'SM'} = '&#8480;';
+$global->{'<3'} = '&#9825;';
+$global->{':)'} = '&#9786;';
 
 # Redirects
-$yml->{'URL'} = 'https://www.google.com/url?q';
-$yml->{'URL'} = 'https://getpocket.com/redirect?url';
-$yml->{'URL'} = 'https://duck.co/redir/?u=';
-$yml->{'URL'} = 'https://ad.zanox.com/ppc/?32249347C62314846&ulp=%5B%5B%%s%5D%5D';
-$yml->{'FB'} = 'https://l.facebook.com/l.php?u=';
-$yml->{'WB'} = 'https://web.archive.org/web/';
+$global->{'URL'} = 'https://www.google.com/url?q';
+$global->{'URL'} = 'https://getpocket.com/redirect?url';
+$global->{'URL'} = 'https://duck.co/redir/?u=';
+$global->{'URL'} = 'https://ad.zanox.com/ppc/?32249347C62314846&ulp=%5B%5B%%s%5D%5D';
+$global->{'FB'} = 'https://l.facebook.com/l.php?u=';
+$global->{'WB'} = 'https://web.archive.org/web/';
 
 
 # Maps & charts example :
 # https://maps.googleapis.com/maps/api/staticmap?autoscale=2&size=600x300&maptype=roadmap&format=png&visual_refresh=true&markers=icon:https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small%26chld=ski%257Cbb%257cIggy%2520L%257cffffff%257cff0000%7Cshadow:true%7CEcublens,CH
 #
 # maps : see [1](https://staticmapmaker.com/google/) 
-$yml->{MAPS} = 'https://maps.googleapis.com/maps/api/staticmap?center=45.0%2c4.0&zoom=5&size=700x500';
+$global->{MAPS} = 'https://maps.googleapis.com/maps/api/staticmap?center=45.0%2c4.0&zoom=5&size=700x500';
 # https://maps.googleapis.com/maps/api/staticmap?center=Albany,+NY&zoom=3&scale=2&size=600x300
 #   &maptype=roadmap&format=png&visual_refresh=true
 #    &markers=size:mid%7Ccolor:0xff0000%7Clabel:1%7CAlbany,+NY
@@ -151,13 +154,29 @@ $yml->{MAPS} = 'https://maps.googleapis.com/maps/api/staticmap?center=45.0%2c4.0
 # pins (?=%3F, &=%26, #=%23 %=%25 @=%40 "=%22 '=%27 |=%7C
 # https://chart.googleapis.com/chart?chst=d_bubble_icon_text_small&chld=
 # charts : see [2](https://developers.google.com/chart/infographics/docs/dynamic_icons)
-$yml->{CHART} = 'https://chart.googleapis.com/chart?cht=qr&chs=222x222&choe=UTF-8&chld=H&chl';
+$global->{CHART} = 'https://chart.googleapis.com/chart?cht=qr&chs=222x222&choe=UTF-8&chld=H&chl';
 
 # FAVICONS 
-$yml->{FAVI} = 'https://www.google.com/s2/favicons?domain';
+$global->{FAVI} = 'https://www.google.com/s2/favicons?domain';
+
+# 1) run substitution on yml keys too !
+foreach my $p (reverse sort keys %{$yml->{page}}) {
+   my $v = $yml->{page}{$p};
+   #printf "pat: {{page.%s}} = %s \n",$p,$v;
+   foreach my $k (keys %{$yml->{page}}) {
+      #printf "   key: %s = %s \n",$k,$yml->{page}{$k};
+      if ($yml->{page}{$k} =~ m/\{\{page\.$p\}\}/) {
+         printf "{{page.%s}} -> %s\n",$p,$v;
+         $yml->{page}{$k} =~ s,\{\{page\.$p\}\},$v,g;
+      }
+   }
+}
+
+#printf "yml.page: %s...\n",Dump($yml->{page});
 
 # 2) flatten all include
  $buf = &includes($buf);
+
 
 # 3) make substitution :
 my $c = 0;
@@ -213,6 +232,12 @@ if ($s) {
    $c += $s;
    printf "c:%d (keys's)\n",$c;
 }
+
+# put back $qm: $
+if ($buf =~ m/\$qm: \w+\s?\$/) {
+  $buf =~ s/\$qm: \w+\s?\$/\$qm: $qm\$/g; # remove eventual \s (! ident)
+}
+
 
 # 4) write file
 if ($file eq $target) { # /!\ DANGEROUS 
@@ -278,7 +303,7 @@ sub substi { # inplace (buf) substitution ...
           }
           $pat =~ s/-/\\-/g;
           $pat =~ s/([()])/\\$1/g;
-          next if (ref $map->{$key} eq 'ARRAY');
+          next if (ref $map->{$key} eq 'ARRAY'); # ARRAY not yet supported 
           #printf "ref: %s\n",ref($map->{$key});
           #next unless (ref $map->{$key} eq '');
           my $value = $map->{$key};
@@ -299,20 +324,40 @@ sub split_yaml_from_data {
    local $/ = "\n";
    my $isyml = 0;
    my $yml = '';
+   my $buf = '';
    while (<F>) {
       tr/\r//d; # *nix style eol !
       if ($isyml == 1) {
-         if (/^([\w_\-\.]+):/ && defined $ns ) {
-            $yml .= $ns.'.'.$_;
+         #if (/^([\w_\-\.]+):/ && defined $ns ) {
+         #  $yml .= $ns.'.'.$_;
+         #} els
+         if (/^[\.\-]{3}$/) {
+            $isyml = 0;
          } else {
             $yml .= $_;
          }
-         if (/^[\.\-]{3}$/) { $isyml = 0; }
       } elsif (m/^---\s(?:#.*)?$/) { # might be buggy when --- inside yml separators...
          $isyml = 1;
+         $yml .= $_;
+      } else {
+         #print "DBUG> $_" if $dbug;
+         $buf .= $_;
       }
    }
    close F;
+
+   use YAML::Syck qw(Load Dump);
+   my $dump = $file.'.split.yml';
+   if ( $yml ne '' ) {
+      local *F; open F,'>',$dump;
+      print F $yml;
+      close F; 
+   }
+   my $meta = Load($yml);
+   if (defined $meta) {
+     unlink $dump unless $dbug;
+   }
+   return ({ $ns => $meta },$buf);
 }
 # -----------------------------------------------------
 sub extract_yml {

@@ -33,7 +33,7 @@ our $VERSION=&version(__FILE__);
 my $file = shift || $0;
 my @ver = &version($file);
 my $age = $ver[0];
-my ($m,$r) = &rev(time);
+my ($r,$m) = &rev(time);
 my $hdr = sprintf "blob %u\0",(lstat($file))[7]; # GIT header
 my $commitid = &get_khash('SHA1',$hdr,$file);
 my $gitid = substr(unpack('H*',$commitid),0,7);
@@ -43,7 +43,7 @@ if ($all) {
    printf "file: %s\n",$file;
    printf qq'gitid: %s\n',$gitid;
    printf qq'version: "%d.%.2f - %s"\n',@ver;
-   printf qq'scheduled: "v%d.%.1f.%d" # (%s+%s)\n',int($age),int($m/10)/10,$m%10+$r,$m,$r;
+   printf qq'scheduled: "v%d.%.1f.%d" # (%s+%s)\n',int($age),int($r/10)/10,$r%10+$m,$r,$m;
 } elsif ($yml) {
    printf "--- # %s (%s)\n",$0,$VERSION;
    printf "gitid: %s\n",$gitid;
@@ -51,9 +51,9 @@ if ($all) {
    printf "age: %.2f\n",$ver[0];
    printf "ver: %.2f\n",$ver[1];
    printf "build: %s\n",$ver[2];
-   printf "minor: %s\n",$m;
    printf "major: %s\n",$r;
-   printf "sched: %.1f.%d\n",int($m/10)/10,$m%10+$r;
+   printf "minor: %s\n",$m;
+   printf "sched: %.1f.%d\n",int($r/10)/10,$r%10+$m;
    printf qq'vtag: "%d.%.2f - %s"\n',@ver;
    print "...\n"
 

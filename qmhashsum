@@ -1,0 +1,191 @@
+#!/usr/bin/perl
+my ($RCSid)= q$Id: qmhashsum.pl,v 1.0 2018/11/25 12:05:57 iglake Exp $ =~ /: (.*)/; # ident
+# $Author: iglake $
+# ===============================================================================
+# compute the qmhash for file passed on stdin
+
+#
+# vim: nospell
+my $pgm = 'qmhashsum';
+# -------------------------------------------------------------------------------
+# The "use vars" and "$VERSION" statements seem to be required.
+use vars qw/$dbug $VERSION/;
+# ----------------------------------------------------
+our $VERSION = sprintf "%d.%02d", q$Revision: 0.0 $ =~ /: (\d+)\.(\d+)/;
+my ($State) = q$State: Exp $ =~ /: (\w+)/; our $dbug = ($State eq 'dbug')?1:0;
+# ----------------------------------------------------
+$VERSION = &version(__FILE__) unless ($VERSION ne '0.00');
+# -------------------------------------------------------------------------------
+# @(🌍) /my/iphs/perl/scripts/qmhashsum
+# @(#) a replacement for md5sum
+# made w/ ♡ by IGL
+# ===============================================================================
+
+printf "--- # %s %.2f\n",$pgm,$VERSION;
+
+my $logf = $ENV{HOME}.'/etc/sets/qmhashsum.txt';
+open $logf,'>>',$logf;
+
+while (<>) {
+chomp;
+     $_ =~ s/^\s+//; # no heading " "
+     $_ =~ s/\s+$//; # no trailing " "
+  my ($ad,$file) = (undef,$_);
+  if (! -e $file) {
+    if (m/\s+/) { # du output
+      ($ad,$file) = split(/\s+/,$_,2);
+    } elsif (m/:\s*/) { # yaml format
+      ($ad,$file) = split(/:\s*/,$_,2);
+    }
+  }
+  next unless -f $file; # only file ...
+  next if -z $file;
+  next if ($file =~ /CIQ.*\.data/); # skip ipfs protobuf files
+  next if ($file =~ /tar.g/); # skip archive files
+  my $tic = time();
+  my $hash = &get_shake(160,$file);
+  my $magic = &get_magic($file);
+  my $magic36 = &base36(unpack'n',$magic);
+  my $mhash58 = 'z'.&encode_base58(pack('H*',"01551920").$hash);
+  my ($dev,$ino,$nlink,$size,$atime,$ctime,$mtime) = (lstat($file))[0,1,3,7,8,9,10];
+  my $etime = ($ctime < $mtime) ? $ctime : $mtime;
+
+
+  # ----------------------------------------------
+  if (0) {
+     my $nb = int( (21+3)/4 );
+     my $key = substr($hash,-$nb-2,$nb);
+     printf "key: 0x%s\n",unpack'H*',$key;
+     $name = &encode_basen($key,63);
+     printf qq'%s "%s"\n',$name,$file;
+  }
+
+  printf "%s: %s\n",$mhash58,$file;
+  printf $logf "%s\t%s\n",$mhash58,$file;
+  #printf "%s: %s\n",$name,join(',',$etime,$size,$magic36,$dev,$ino,$nlink,$atime,$ctime,$mtime);
+  # ----------------------------------------------
+}
+print "...\n";
+close $logf;
+
+
+exit $?;
+
+
+
+
+# -----------------------------------------------------------------------
+sub get_magic {
+  my $file = shift; local *F; open F,'<',$file;
+  my $magic; read(F,$magic,4); close F;
+  return $magic;
+}
+# -----------------------------------------------------------------------
+sub get_shake {
+  use Crypt::Digest::SHAKE;
+  my $len = shift;
+  local *F; open F,$_[0] or do { warn qq{"$_[0]": $!}; return undef };
+  #binmode F unless $_[0] =~ m/\.txt/;
+  my $msg = Crypt::Digest::SHAKE->new(256);
+  $msg->addfile(*F);
+  my $digest = $msg->done(($len+7)/8);
+  return $digest;
+}
+# -----------------------------------------------------------------------
+sub fdow {
+   my $tic = shift;
+   use Time::Local qw(timelocal);
+   ##     0    1     2    3    4     5     6     7
+   #y ($sec,$min,$hour,$day,$mon,$year,$wday,$yday)
+   my $year = (localtime($tic))[5]; my $yr4 = 1900 + $year ;
+   my $first = timelocal(0,0,0,1,0,$yr4);
+   $fdow = (localtime($first))[6];
+   #printf "1st: %s -> fdow: %s\n",&hdate($first),$fdow;
+   return $fdow;
+}
+# -----------------------------------------------------------------------
+sub version {
+  my @times = sort { $a <=> $b } (lstat($_[0]))[9,10]; # ctime,mtime
+  my $vtime = $times[-1];
+  my ($sec,$min,$hour,$mday,$mon,$yy,$wday,$yday) = (localtime($vtime))[0..7]; # most recent
+  printf "%s/%s/%s \@ %d:%02d:%02d\n",$mday,$mon+1,$yy+1900,$hour,$min,$sec if $dbug;
+  my $rweek=($yday+&fdow($vtime))/7;
+  my $rev_id = int($rweek) * 4;
+  my $low_id = int(($wday+($hour/24)+$min/(24*60))*4/7);
+  my $version = ($rev_id + $low_id) / 100;
+  return sprintf '%g',$version;
+}
+# -----------------------------------------------------------------------
+sub base36 { # letters and numbers
+  use integer;
+  my ($n) = @_;
+  my $e = '';
+  return('0') if $n == 0;
+  while ( $n ) {
+    my $c = $n % 36;
+    $e .=  ($c<=9)? $c : chr(0x37 + $c); # 0x37: upercase, 0x57: lowercase
+    $n = int $n / 36;
+  }
+  return scalar reverse $e;
+}
+# -----------------------------------------------------
+sub encode_base58 {
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $bin = join'',@_;
+  my $bint = Math::BigInt->from_bytes($bin);
+  my $h58 = Encode::Base58::BigInt::encode_base58($bint);
+  $h58 =~ tr/a-km-zA-HJ-NP-Z/A-HJ-NP-Za-km-z/;
+  return $h58;
+}
+# -----------------------------------------------------
+sub encode_basen { # n < 94;
+  use Math::BigInt;
+  my ($data,$radix) = @_;
+  my $alphab = &alphab($radix);;
+  my $mod = Math::BigInt->new($radix);
+  #printf "mod: %s, lastc: %s\n",$mod,substr($alphab,$mod,1);
+  my $h = '0x'.unpack('H*',$data);
+  my $n = Math::BigInt->from_hex($h);
+  my $e = '';
+  while ($n->bcmp(0) == +1)  {
+    my $c = Math::BigInt->new();
+    ($n,$c) = $n->bdiv($mod);
+    $e .= substr($alphab,$c->numify,1);
+  }
+  return scalar reverse $e;
+}
+# ---------------------------------------------------------
+sub alphab {
+  my $radix = shift;
+  my $alphab;
+  if ($radix < 12) {
+    $alphab = '0123456789-';
+  } elsif ($radix <= 16) {
+    $alphab = '0123456789ABCDEF';
+  } elsif ($radix <= 26) {
+    $alphab = 'ABCDEFGHiJKLMNoPQRSTUVWXYZ';
+  } elsif ($radix == 32) {
+    $alphab = '0123456789ABCDEFGHiJKLMNoPQRSTUV'; # Triacontakaidecimal
+    $alphab = join('',('A' .. 'Z', '2' .. '7')); # RFC 4648
+    $alphab = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'; # Crockfordś ![ILOU] (U:accidental obscenity)
+    $alphab = 'ybndrfg8ejkmcpqxotluwisza345h769';  # z-base32 ![0lv2]
+
+  } elsif ($radix == 36) {
+    $alphab = 'ABCDEFGHiJKLMNoPQRSTUVWXYZ0123456789'; 
+  } elsif ($radix <= 37) {
+    $alphab = '0123456789ABCDEFGHiJKLMNoPQRSTUVWXYZ.'; 
+  } elsif ($radix == 43) {
+    $alphab = 'ABCDEFGHiJKLMNoPQRSTUVWXYZ0123456789 -+.$%*';
+  } elsif ($radix == 58) {
+    $alphab = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  } else { # n < 94
+    $alphab = '-0123456789'. 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.
+                             'abcdefghijklmnopqrstuwvxyz'.
+             q/+.@$%_,~`'=;!^[]{}()#&/.      '<>:"/\\|?*'; #
+  } 
+  # printf "// alphabet: %s (%uc)\n",$alphab,length($alphab);
+  return $alphab;
+}
+# -----------------------------------------------------------------------
+1; # $Source: $
