@@ -2,7 +2,7 @@
 BEGIN { my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,0,$p):'.'; }
 
 use lib $bindir; use SITE qw(); # enabling site's modules
-use UTIL qw(hashr shake encode_base58 encode_base58f encode_base32 encode_base10);
+use UTIL qw(hashr shake encode_base58 encode_base58f encode_base32 encode_base36 encode_base10);
 
 local $/ = undef;
 my $buf = <STDIN>;
@@ -21,8 +21,18 @@ printf "h58f: Z%s\n",&encode_base58f($hash);
 
 my $mhash = pack('H*',"0170191C").$hash;
 my $mh32 = &encode_base32($mhash);
+my $mh36 = &encode_base36($mhash);
 printf "mh32: b%s\n",lc$mh32;
+printf "mh36: k%s\n",uc$mh36;
 printf "mh58: z%s\n",&encode_base58($mhash);
 my $shard = substr($mh32,-3,2);
-printf "file: ~/.ipfs/%s/%s.data\n",$shard,$mh32;
+my $IPFS_PATH = (defined $ENV{IPFS_PATH}) ? $ENV{IPFS_PATH} : $ENV{HOME}.'/.ipfs';
+my $file = sprintf "%s/blocks/%s/%s.data",$IPFS_PATH,$shard,$mh32;
+if (-e $file) {
+  printf "file: %s\n",$file;
+} else {
+  printf "file: ~/.ipfs/blocks/%s/%s.data\n",$shard,$mh32;
+  local *F; open F,'>','/tmp/sk224.data'; print F $buf ; close F;
+  printf "copy: |-\n  cp -p %s %s\n",'/tmp/sk224.data',$file;
+}
 1;

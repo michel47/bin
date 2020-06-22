@@ -15,13 +15,18 @@ echo domain: $domain
 toplevel=$(git rev-parse --show-toplevel)
 gitdir=$(git rev-parse --git-dir)
 prefix=$(git rev-parse --show-prefix)
+headid=$(cat $gitdir/HEAD | cut -d' ' -f2)
 
 #prev=$(ipfs add -Q -w $gitdir/config )
 prev=$(git config ipfs.qm)
 if [ "x$IPFS_PATH" != 'x' ]; then
 echo  IPFS_PATH: $IPFS_PATH
 fi
-qm=$(ipfs add -Q -n -w -r $gitdir/config . )
+if [ -e $gitdir/$headid ]; then
+qm=$(ipfs add --ignore-rules-path=$HOME/.ipfsignore -Q -w -r $gitdir/config $gitdir/$headid . )
+else
+qm=$(ipfs add --ignore-rules-path=$HOME/.ipfsignore -Q -w -r $gitdir/config . )
+fi
 
 eval $(perl -S fullname.pl -a $qm | eyml)
 

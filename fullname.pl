@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 
 our $dbug=0;
+our $cached=$ENV{DICT} || $ENV{HOME}.'/.cache/fullname.pl/qmDict';
 #--------------------------------
 # -- Options parsing ...
 #
@@ -99,6 +100,28 @@ if ($all) {
 exit $?;
 
 # -----------------------------------------------------------------------
+sub get_file {
+ local *F;
+ local $/ = undef;
+ open F,'<',$_[0];
+ my $buf = <F>;
+ close F;
+ return $buf;
+}
+# -----------------------------------------------------------------------
+sub write_file {
+  my $file = shift;
+  my $dirname = substr($file,0,rindex($file,'/'));
+  mkdir $dirname unless -d $dirname;
+  local *F; open F,'>',$file or die $!; # TBD use semaphore
+  binmode(F) unless $file =~ m/\.txt/;
+  print F $_[0];
+  close F;
+  return $?;
+}
+# -----------------------------------------------------------------------
+# TBD : implemend a mkdir -p 
+# -----------------------------------------------------------------------
 sub get_ipfs_content {
   my $ipath=shift;
   use LWP::UserAgent qw();
@@ -125,8 +148,14 @@ sub load_qmlist {
    my $wordlist = $wordlists->{$wlist};
    my $wl = scalar @$wordlist;
    if ($wl < 1) {
-      my $file;
-      my $buf = &get_ipfs_content("/ipfs/$qmDICT/$wlist.txt");
+      my $buf;
+      my $DICT = $ENV{DICT} || $ENV{HOME}.'/.cache/fullname.pl';
+      if (-d $DICT && -e "$DICT/$wlist.txt") {
+        $buf = &get_file("$DICT/$wlist.txt");
+      } else {
+        $buf = &get_ipfs_content("/ipfs/$qmDICT/$wlist.txt");
+        &write_file("$DICT/$wlist.txt",$buf);
+      }
       if (ref($buf) eq 'HASH' || $buf eq '') {
         return undef;
       }
@@ -245,7 +274,7 @@ sub get_gwhostport {
   my $resp = $ua->get($url);
   if ($resp->is_success) {
     return ($gwhost,$gwport);
-  } else { #do a second attempt 
+  } else { #do a second attempt on 0:8080
     my $ua = LWP::UserAgent->new();
     $gwhost = 'localhost';
     $gwport = 8080;

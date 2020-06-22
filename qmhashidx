@@ -25,7 +25,9 @@ $VERSION = &version(__FILE__) unless ($VERSION ne '0.00');
 # @(#) a replacement for md5sum
 # made w/ ♡ by IGL
 # ===============================================================================
+use YAML::Syck qw(DumpFile);
 
+$| = 1;
 printf "--- # %s %.2f\n",$pgm,$VERSION;
 
 my $logf = $ENV{HOME}.'/etc/sets/qmhsum.txt';
@@ -35,6 +37,7 @@ open $logf,'>>',$logf;
 open $metaf,'>>',$metaf;
 open $idxf,'>>',$idxf;
 
+my %coll = ();
 while (<>) {
 chomp;
      $_ =~ s/^\s+//; # no heading " "
@@ -47,7 +50,9 @@ chomp;
       ($ad,$file) = split(/:\s*/,$_,2);
     }
   }
+  next if $file =~ /\/\.vim/;
   next unless -f $file; # only file ...
+  next unless -r $file;
   next if -z $file;
   next if ($file =~ /CIQ.*\.data/); # skip ipfs protobuf files
   my $tic = time();
@@ -62,7 +67,13 @@ chomp;
   # ----------------------------------------------
   #printf "key: 0x%s\n",unpack'H*',$key;
   $name = &encode_basen($key,63);
-  printf qq'%s "%s"\n',$name,$file;
+  $coll{$name}{$hash}++;
+  if (scalar(keys %{$coll{$name}}) > 1) { 
+     my $nc = scalar(keys(%{$coll{$name}}));
+     printf qq'\e[31m%s: collide %u times w/ "%s\e[0m"\n',$name,$nc,$file;
+     DumpFile('collision.yml',\%coll);
+  }
+  printf qq'%u: %s "%s"\r',$.,$name,$file;
   printf $logf "%s\t%s\n",$mhash58,$file;
   printf $idxf "%s: [%s,%u]\n",$name,$mhash58,$tic;
   printf $metaf "%s: %s\n",$name,join(',',$etime,$size,$magic36,$dev,$ino,$nlink,$atime,$ctime,$mtime);

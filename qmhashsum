@@ -23,7 +23,7 @@ $VERSION = &version(__FILE__) unless ($VERSION ne '0.00');
 
 printf "--- # %s %.2f\n",$pgm,$VERSION;
 
-my $logf = $ENV{HOME}.'/etc/sets/qmhashsum.txt';
+my $logf = $ENV{HOME}.'/etc/sets/qmhashsum.log';
 open $logf,'>>',$logf;
 
 while (<>) {
@@ -61,7 +61,7 @@ chomp;
   }
 
   printf "%s: %s\n",$mhash58,$file;
-  printf $logf "%s\t%s\n",$mhash58,$file;
+  printf $logf "%s: %s\n",$mhash58,$file;
   #printf "%s: %s\n",$name,join(',',$etime,$size,$magic36,$dev,$ino,$nlink,$atime,$ctime,$mtime);
   # ----------------------------------------------
 }

@@ -33,14 +33,13 @@ $gecos = uc(substr($user,0,2));
 ($fullname= $gecos) =~ s/,([^,]*).*$//;
 $dpt = $1;
 @org = split(' ',$dpt);
-$ORG = $org[1] . $org[2] || 'IPHuO';
+$ORG = $org[1] . $org[2] || 'GQU';
 my ($fname,$mname,$lname) = split(' ',$fullname,3);
 if (! defined $lname) {
   $lname = $mname; $mname = 'G.';
 }
 my $sname = $lname; $sname =~ y/aeiou//d;
 my $MSGID = uc substr(substr($fname,0,1) . substr($mname,0,1) . $sname,0,4);
-print "User: $fullname ($MSGID) $ORG\n" if $dbug;
 # -------------------------------------------------------
 
 # -- Options parsing ...
@@ -49,24 +48,27 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
     $arg = shift(@ARGV);
 
     $quiet = 1,       next if $arg =~ m/^-[qs]$/;
-    $what = $1 ? "$1" : shift || 'name', next if $arg =~ m/^-w(?:hat)?+(\w+)?$/;
+    $what = $1 ? "$1" : shift || 'name', next if $arg =~ m/^--?w(?:hat)?+(\w+)?$/;
     $human = 1,       next if $arg =~ m/^-d$/;
     $mail = 1,        next if $arg =~ m/^-m(?:ail)?$/;
     $log = 1,        next if $arg =~ m/^-l(?:og)?$/;
     $id = 1,         next if $arg =~ m/^-i(?:d)?$/i;
-    $rcs = $1 ? "$1" : shift || 'file.txt', next if $arg =~ m/^-r(?:cs)?+(\.*)?$/;
-    $cvs = 1,        next if $arg =~ m/^-c(?:vs)?$/;
+    $rcs = $1 ? "$1" : shift || 'file.txt', next if $arg =~ m/^--?r(?:cs)?+(\.*)?$/;
+    $cvs = 1,        next if $arg =~ m/^--?c(?:vs)?$/;
     $http = 1,        next if $arg =~ m/^-h(?:ttp|tml?)?$/;
     $tag= $1 ? "t$1" : shift || 'tag', next if $arg =~ m/^-t(\w+)?$/;
-    $touch = 1,       next if $arg =~ m/^-u(?:time)?$/;
-    $touch = 1,       next if $arg =~ m/^-to(?:uch)?$/;
-    $event = $1 ? $1 : shift || 'me',  next if $arg =~ m/^-a(?:ge)?+(\w+)?$/;
-    $usage = 1,       next if $arg =~ m/^-h(?:elp)?$/;
+    $touch = 1,       next if $arg =~ m/^--?u(?:time)?$/;
+    $touch = 1,       next if $arg =~ m/^--?to(?:uch)?$/;
+    $event = $1 ? $1 : shift || 'me',  next if $arg =~ m/^--?a(?:ge)?+(\w+)?$/;
+    $usage = 1,       next if $arg =~ m/^--?h(?:elp)?$/;
 
 }
 #understand variable=value on the command line...
 eval "\$$1=$2"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
 $verbose = ($quiet) ? 0 : 1;
+
+printf "gecos: %s\n",$gecos if $dbug;
+print "User: $fullname ($MSGID) $ORG\n" if $dbug;
 
 @DoW = ('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
 @MoY = ('Jan','Feb','Mar','Apr','May','Jun',
@@ -86,20 +88,31 @@ if ($#ARGV < 0) {
 while (@ARGV) {
   $date= shift;
   if ($ARGV[0] =~ m/\:/) { $time = shift; }
+  elsif ($ARGV[0] =~ m/\./) { $time = shift; $time =~ y/./:/;}
   else { $time ||= "$hour:$min:00"; }
   ($hour,$min,$sec) = split ':', $time;
 
   printf "%s at $time ?\n", $date if $dbug;
-  if ($date =~ m|/|) { # date of form 07/28/97
-    ($mon,$mday,$year) = split '/', $date;
+  if ($date =~ m|/|) { # date of form 07/28/97 (US style)
+     ($mon,$mday,$year) = split '/', $date;
+     if ($mon > 12) { # date of form 1997/7/28 (EU style)
+        ($year,$mon,$mday) = split '/', $date;
+     }
      $year ||= $yy;
-    $tic= timelocal($sec,$min,$hour,$mday,$mon-1,$year);
+     $tic= timelocal($sec,$min,$hour,$mday,$mon-1,$year);
+  }
+  elsif ($date =~ m|\.|) { # date of form 28.07.97 (Swiss style)
+     ($mday,$mon,$year) = split '\.', $date;
+     if ($mon > 12) { # date of form 7.28.97 (US style)
+        ($mon,$mday,$year) = split '\.', $date;
+     }
+     $year ||= $yy;
+     $year += 100 if ($year < $yy);
+     #$yr4 = $year + 1900 if ($year < 70);
+     $tic= timelocal($sec,$min,$hour,$mday,$mon-1,$year);
   }
   elsif ($date =~ m|\d-\d|) { # date of form 2020-04-15 03:56:24
     ($year,$mon,$mday) = split '-', $date;
-    if ($ARGV[0] =~ m/\:/) { $time = shift; 
-      ($hour,$min,$sec) = split ':', $time;
-    }
     $tic= timelocal($sec,$min,$hour,$mday,$mon-1,$year);
   }
   elsif ($date =~ /^W*H(\d+.*)/) {
@@ -300,4 +313,6 @@ sub hday { # hash of the day
 
 
 do{$|=1;print "Press any key to continue ...";local$_=<STDIN>} unless defined $ENV{SHLVL} ;
-exit 1;
+exit $?;
+
+1;

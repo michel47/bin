@@ -1,0 +1,369 @@
+#!/usr/bin/env perl
+# $Id: addlist,v 0.9.7 2020-6-22 13:03:02 michelc Exp $
+#
+# $Birth: 1588089061$
+# --
+# addlist 2849b @(#) GQU : 28-Apr-20 (MYCL) 17:51:01 - WW17 [b]
+#
+# - 4165b MYCL: added the option of local file for indexes
+# 
+
+# This script take a list of files and computes
+# the hashes for each files to create a index
+#
+# usage
+# locate spot.pl | perl -S addlist
+
+my $_MB = 1024 * 1024;
+my $indexl = 'hash-file-list.log';
+my $indexf,$indext,$indexd,$indexx;
+if (-e $indexl) {
+   printf "using: %s\n",$indexl;
+   $indexf = 'hash-file-index.txt';
+   $indext = 'hash-tags-index.txt';
+   $indexd = 'hash-dir-index.txt';
+} else {
+   $indexf = $ENV{HOME}.'/my/etc/ipfs-file-index.txt';
+   $indexl = $ENV{HOME}.'/my/etc/ipfs-log-index.txt';
+   $indext = $ENV{HOME}.'/my/etc/ipfs-tags-index.txt';
+   $indexd = $ENV{HOME}.'/my/etc/ipfs-dir-index.txt';
+
+   $indexx = $ENV{HOME}.'/my/etc/ipfs-excluded-index.txt';
+}
+use Crypt::Digest qw();
+use Digest::MurmurHash qw(murmur_hash);
+
+my @content = ();
+if (@ARGV) {
+ @list = @ARGV;
+} else {
+  while (<>) {
+   chomp;
+   my @F = split(/\s+/,$_,2);
+   if (-e $F[0]) {
+     push @list, $F[0];
+   } elsif (-e $F[-1]) {
+     push @list, $F[-1];
+   }
+  }
+}
+
+printf "%s: %d files\n",$0,scalar @list;
+local *D;
+
+my $i = 0;
+local *FI; 
+if (! -e $indexf) {
+open FI,'>',$indexf; # file
+ print FI "fname,etime,ltime,size,mu,qm,git,shk,md5,sha1,sha2,md6\n";
+} else {
+open FI,'>>',$indexf; # file
+}
+open LI,'>>',$indexl; # etime log
+open TI,'>>',$indext; # tags,sdir etc.
+open DI,'>>',$indexd; # directory
+open XI,'>>',$indexx; # excluded
+while (@list) {
+  my $file = shift(@list);
+  my ($dir,$fname) = &fsplit($file);
+  my $sdir = &shortpath($dir);
+
+  #printf "p: %s\n",$p;
+  #if (-f $file) {
+    #printf "file: %s\n",$file;
+  #}
+  if (-d $file) {
+    printf "directory: %s\n",$file;
+  }
+  if (0) {
+     printf "fname: %s\n",$fname;
+     printf "parent: %s\n",$dir;
+     printf "sdir: %s\n",$sdir;
+  }
+  # -----------------------------------------------
+  # skip sensitive data ...
+  next if $fname eq 'blocks';
+  if ($fname =~ m/(:?^sec|sec$|priv$)/o) {
+    printf "   %s: skipped \n",$file;
+    printf XI "%s: %u,%u,%u,%s, %s\n",$fname,$etime,$ltime,$size,'...',$sdir;
+    next;
+  }
+  next if ($file =~ m/undo/);
+  next if ($fname =~ m/\.sw.?$/);
+  # -----------------------------------------------
+  if (-f $file) {
+   my $btic = &get_birth($file);
+   my ($size,$atime,$mtime,$ctime) = (lstat($file))[7,8,9,10];
+   if ($size > 10*$_MB) {
+    printf "   %s: %.3fMB too big \n",$file,$size/$_MB;
+    next;
+   }
+   local *F; open F,'<',$file;
+   local $/ = undef; my $content = <F>;
+   close F;
+   #if (0) {
+   my $mu = &murmur_hash($content);
+   my $ltime = (sort { $a <=> $b } $mtime,$ctime)[-1]; # latest of the two
+   my $etime = (sort { $a <=> $b } $atime,$mtime,$ctime)[0]; # earliest of the three
+   my $vtime = $ltime;
+   my $rev = &rev($vtime);
+
+   my $shk = &shake(160,$content);
+   
+   my $gitbin = &digest('GIT',$content);
+   my $md5 = &digest('MD5',$content);
+   my $sha1 = &digest('SHA1',$content);
+   my $sha2 = &digest('SHA-256',$content);
+   my $qm = &qmhash('SHA256',$content);
+   my $md6 = &digest('MD6',$content);
+   printf "%u: %x %s/%s %s v%.2f\n",$etime,$mu,$sdir,$fname,$file,$rev;
+   printf LI "%u: %x %s/%s v%.2f\n",$etime,$mu,$sdir,$fname,$rev;
+
+   printf FI "%s: %u,%u,%u,%u,%x,%s, %s\n",$fname,$btic,$etime,$ltime,$size,$mu,
+     join(',',map { &encode_base58($_); } ($qm,$gitbin,$shk,$md5,$sha1,$sha2,$md6)),$sdir;
+   printf TI "%x: %s,%s, %s, #%u\n",$mu,$fname,$sdir,$file,$seen{$mu}++;
+   #}
+    $i++;
+  } elsif (-l $file) { # links are not processed yet !
+    printf "   %s: is a link\n",$file;
+  } elsif (-d $file) {
+    printf "// %s: ",$file;
+    my $sdir = &shortpath($file);
+    printf DI "%u: %s,%s\n",$^T,$sdir,$file;
+    opendir D,$file;  my @subs = grep ! /^\./, readdir(D); closedir D;
+    printf "%+d files ",scalar @subs;
+    push @list, map { "$fname/$_"; } @subs;
+    printf ": %d items\n",scalar @content;
+  }
+}
+close FI;
+close TI;
+close DI;
+close XI;
+my $size = (lstat($indexf))[7];
+print  "--- #\n";
+printf "index: %s\n",$indexf;
+printf "directory: %s\n",$indexd;
+printf "n: %u (%.3fM)\n",$i,$size/$_MB;
+exit $?;
+# ---------------------------------------------------------
+sub shortpath { # create shortpath using only first letters and appending 5 last for MD5
+  my $path = shift;
+     $path =~ s/$ENV{HOME}/\~/;
+  my $spath = $path;
+     $spath =~ y[~/@A-Za-z0-9][]dc;
+    #$spath =~ s,/(.)[^/]*,\1,g;
+     $spath =~ s,/(.)[^/]*,\1,g;
+     $spath = '/'.$spath if ($path =~ m{^/});
+  my $md5 = unpack'H*',&hash1('MD5',lc$path);
+  my $key = substr($md5,-5);
+  return $spath.'-'.$key;
+}
+# ---------------------------------------------------------
+sub qmhash { # IPFS' cidv0 : 
+   my $algo = shift;
+   my $mhfncode = { 'SHA256' => 0x12, 'SHA1' => 0x11, 'MD5' => 0xd5, 'ID' => 0x00, 'GIT' => 0x11};
+   my $mhfnsize = { 'SHA256' => 256, 'SHA1' => 160, 'MD5' => 128};
+   my $data = &qmcontainer(join'',@_);
+   my $hash = undef;
+   if ($algo eq 'GIT') {
+     my $hdr = sprintf 'blob %u\0',length($data);
+     $hash = &hash1($algo,$hdr,$data);
+   } else {
+     $hash = &hash1($algo,$data);
+   }
+   my $mh = pack'C',$mhfncode->{$algo}; # 0x12; 
+   my $hsize = $mhfnsize->{$algo}/8; # 256/8
+   my $mhash = join'',$mh,&varint($hsize),substr($hash,0,$hsize);
+   return $mhash;
+}
+# ---------------------------------------------------------
+sub qmcontainer { # (cidv0)
+   my $msg = shift;
+   my $msize = length($msg);
+   # Qm container are off format : { Data1: { f1 Data2 Tsize3 }}
+   # QmPa5thw8vNXH7eZqcFX8j4cCkGokfQgnvbvJw88iMJDVJ
+   # 00000000: 0a0e 0802 1208 6865 6c6c 6f20 210a 1808  ......hello !...
+   # {"Links":[],"Data":"\u0008\u0002\u0012\u0008hello !\n\u0018\u0008"}
+   # header:  0000_1010 : f1.t2 size=14 (0a0e)
+   # payload: 0802_1208 ... 1808
+   #          0000_1000 : f1.t0 varint=2 (0802)
+   #          0001_0010 : f2.t2 size=8 ... (1208 ...)
+   #          0001_1000 : f3.t0 varint=8 (1808)
+
+   my $f1 = sprintf      '%s%s',pack('C',(1<<3|0)),&varint(2); # f1.t0 varint=2
+      $data2 = sprintf '%s%s%s',pack('C',(2<<3|2)),&varint($msize),$msg; # f2.t2 msize msg
+      $tsize3 = sprintf  '%s%s',pack('C',(3<<3|0)),&varint($msize); # f3.t0 msize
+   my $payload = $f1 . $data2 . $tsize3;
+
+   my $data = sprintf "%s%s%s",pack('C',(1<<3|2)),&varint(length($payload)),$payload; # f1.t2 size, payload
+   return $data;
+}
+sub varint {
+  my $i = shift;
+  my $bin = pack'w',$i; # Perl BER compressed integer
+  # reverse the order to make is compatible with IPFS varint !
+  my @C = reverse unpack("C*",$bin);
+  # clear msb on last nibble
+  my $vint = pack'C*', map { ($_ == $#C) ? (0x7F & $C[$_]) : (0x80 | $C[$_]) } (0 .. $#C);
+  return $vint;
+}
+
+# ---------------------------------------------------------
+sub get_birth { # extract birth time from file
+  local *F; open F,'<',$_[0];
+  my $btic = 0;
+  while (<F>) {
+    if (m/\b\$?[bB]irth: (\d+)\$/) { $btic = $1; last; }
+  }
+  if ($btic == 0) { # try to see if there is a first git version ..
+    my ($fpath,$fname,undef,undef) = &fsplit($_[0]);
+    my $gitcmd = sprintf('git -C "%s" log --reverse --format="%%at" --all --full-history "%s"',$fpath,$fname);
+    printf "info: %s\n", $gitcmd if $dbug;
+    local *EXEC; open EXEC,"$gitcmd 2>/dev/null |" or warn $!;
+    local $/ = "\n";
+    $btic = <EXEC>; chomp($btic); close EXEC;
+
+  }
+  close F;
+  if (! $btic) {
+   $btic = (sort { $a <=> $b } (lstat($_[0]))[8,9,10])[0]; # smallest one !
+  }
+  printf "btic: %s\n",$btic if $dbug;
+  return $btic;
+}
+# ---------------------------------------------------------
+sub get_shake { # use shake 256 because of ipfs' minimal length of 20Bytes
+  use Crypt::Digest::SHAKE;
+  my $len = shift;
+  local *F; open F,$_[0] or do { warn qq{"$_[0]": $!}; return undef };
+  #binmode F unless $_[0] =~ m/\.txt/;
+  my $msg = Crypt::Digest::SHAKE->new(256);
+  $msg->addfile(*F);
+  my $digest = $msg->done(($len+7)/8);
+  return $digest;
+}
+# ---------------------------------------------------------
+sub hash1 {
+   my $alg = shift;
+   my $ns = shift;
+   my $data = shift;
+   my $msg = Crypt::Digest->new($alg) or die $!;
+      $msg->add($ns.$data);
+   my $hash = $msg->digest();
+   return $hash;
+}
+# ---------------------------------------------------------
+sub digest ($@) {
+ my $alg = shift;
+ my $header = undef;
+ my $text = shift;
+ use Digest qw();
+ if ($alg eq 'GIT') {
+   $header = sprintf "blob %u\0",length($text);
+   $alg = 'SHA-1';
+ }
+ my $msg = Digest->new($alg) or die $!;
+    $msg->add($header) if $header;
+    $msg->add($text);
+ my $digest = $msg->digest();
+ return $digest; #binary form !
+}
+# ---------------------------------------------------------
+sub shake { # use shake 256 because of ipfs' minimal length of 20Bytes
+  use Crypt::Digest::SHAKE;
+  my $len = shift;
+  my $msg = Crypt::Digest::SHAKE->new(256);
+  $msg->add(join'',@_);
+  my $digest = $msg->done(($len+7)/8);
+  return $digest;
+}
+# ---------------------------------------------------------
+sub khash { # keyed hash
+   use Crypt::Digest qw();
+   my $alg = shift;
+   my $data = join'',@_;
+   my $msg = Crypt::Digest->new($alg) or die $!;
+      $msg->add($data);
+   my $hash = $msg->digest();
+   return $hash;
+}
+# ---------------------------------------------------------
+sub encode_base58 { # btc
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $bin = join'',@_;
+  my $bint = Math::BigInt->from_bytes($bin);
+  my $h58 = Encode::Base58::BigInt::encode_base58($bint);
+  $h58 =~ tr/a-km-zA-HJ-NP-Z/A-HJ-NP-Za-km-z/;
+  return $h58;
+}
+# ---------------------------------------------------------
+sub rev {
+  my ($sec,$min,$hour,$mday,$mon,$yy,$wday,$yday) = (localtime($_[0]))[0..7];
+  my $rweek=($yday+&fdow($_[0]))/7;
+  my $rev_id = int($rweek) * 4;
+  my $low_id = int(($wday+($hour/24)+$min/(24*60))*4/7);
+  my $revision = ($rev_id + $low_id) / 100;
+  my $major = int($rev_id/10)/10,
+  my $rev = $rev_id%10+$low_id;
+  return (wantarray) ? ($major,$rev,$low_id,$yy) : $revision;
+}
+# ---------------------------------------------------------
+sub fdow {
+   my $tic = shift;
+   use Time::Local qw(timelocal);
+   ##     0    1     2    3    4     5     6     7
+   #y ($sec,$min,$hour,$day,$mon,$year,$wday,$yday)
+   my $year = (localtime($tic))[5]; my $yr4 = 1900 + $year ;
+   my $first = timelocal(0,0,0,1,0,$yr4);
+   $fdow = (localtime($first))[6];
+   #printf "1st: %s -> fdow: %s\n",&hdate($first),$fdow;
+   return $fdow;
+}
+# ---------------------------------------------------------
+sub word { # 20^4 * 6^3 words (25bit worth of data ...)
+ use integer;
+ my $n = $_[0];
+ my $vo = [qw ( a e i o u y )]; # 6
+ my $cs = [qw ( b c d f g h j k l m n p q r s t v w x z )]; # 20
+ my $str = '';
+ if (1 && $n < 26) {
+ $str = chr(ord('a') +$n%26);
+ } else {
+ $n -= 6;
+ while ($n >= 20) {
+   my $c = $n % 20;
+      $n /= 20;
+      $str .= $cs->[$c];
+   #print "cs: $n -> $c -> $str\n";
+   my $c = $n % 6;
+      $n /= 6;
+      $str .= $vo->[$c];
+   #print "vo: $n -> $c -> $str\n";
+
+ }
+ if ($n > 0) {
+   $str .= $cs->[$n];
+ }
+ return $str;
+ }
+}
+# -----------------------------------------------------------------------
+sub fsplit {
+  my $file = shift;
+
+  my $p = rindex($file,'/');
+  if ($p != 0) {
+    $fname = substr($file,$p+1);
+    $dir = substr($file,0,$p);
+  } else {
+    $fname = $file;
+    $dir = '.'
+  }
+  return ($dir,$fname);
+}
+
+
+
+1; # $Source: /my/perl/scripts/addlist.pl $

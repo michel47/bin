@@ -74,6 +74,7 @@ my $b10 = &encode_base10($bin);
 my $b12 = &encode_base12($bin);
 my $b32 = &encode_base32($bin);
 my $b32z = &encode_base32z($bin);
+my $b36 = &encode_base36($bin);
 my $b43 = &encode_basen($bin,43);
 my $b58 = &encode_base58($bin);
 my $b58f = &encode_base58f($bin);
@@ -90,6 +91,7 @@ printf "b12: E%s\n",$b12;
 printf "b16: f%s\n",$b16;
 printf "b32: B%s\n",$b32;
 printf "b32z: h%s\n",lc$b32z;
+printf "b36: k%s\n",lc$b36;
 printf "b39: *%s*\n",&encode_basen($bin,39);
 printf "b43: |%s|\n",$b43;
 printf "b58: z%s\n",$b58;
@@ -213,6 +215,24 @@ sub decode_base32 {
   return $bin;
 }
 # --------------------------------------------
+sub encode_base36 {
+  use Math::BigInt;
+  use Math::Base36 qw();
+  my $n = Math::BigInt->from_bytes(shift);
+  my $k36 = Math::Base36::encode_base36($n,@_);
+  #$k36 =~ y,0-9A-Z,A-Z0-9,;
+  return $k36;
+}
+sub decode_base36 {
+  use Math::BigInt;
+  use Math::Base36 qw();
+  #$k36 = uc($_[0])
+  #$k36 =~ y,A-Z0-9,0-9A-Z;
+  my $n = Math::Base36::decode_base36($_[0]);
+  my $bin = Math::BigInt->new($n)->as_bytes();
+  return $bin;
+}
+# --------------------------------------------
 sub encode_base58f { # flickr
   use Math::BigInt;
   use Encode::Base58::BigInt qw();
@@ -318,6 +338,8 @@ sub alphab {
     $alphab = 'ABCDEFGHiJKLMNoPQRSTUVWXYZ0123456789';
   } elsif ($radix <= 38) {
     $alphab = '0123456789ABCDEFGHiJKLMNoPQRSTUVWXYZ.-';
+  } elsif ($radix <= 39) {
+    $alphab = 'ABCDEFGHiJKLMNoPQRSTUVWXYZ0123456789-_+';
   } elsif ($radix <= 40) {
     $alphab = 'ABCDEFGHiJKLMNoPQRSTUVWXYZ0123456789-_.+';
   } elsif ($radix <= 43) {
