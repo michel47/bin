@@ -33,7 +33,7 @@ $gecos = uc(substr($user,0,2));
 ($fullname= $gecos) =~ s/,([^,]*).*$//;
 $dpt = $1;
 @org = split(' ',$dpt);
-$ORG = $org[1] . $org[2] || 'IPHuO';
+$ORG = $org[1] . $org[2] || 'GQU';
 my ($fname,$mname,$lname) = split(' ',$fullname,3);
 if (! defined $lname) {
   $lname = $mname; $mname = 'G.';
@@ -54,6 +54,7 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
     $mail = 1,        next if $arg =~ m/^-m(?:ail)?$/;
     $log = 1,        next if $arg =~ m/^-l(?:og)?$/;
     $id = 1,         next if $arg =~ m/^-i(?:d)?$/i;
+    $rcs = $1 ? "$1" : shift || 'file.txt', next if $arg =~ m/^-r(?:cs)?+(\.*)?$/;
     $cvs = 1,        next if $arg =~ m/^-c(?:vs)?$/;
     $http = 1,        next if $arg =~ m/^-h(?:ttp|tml?)?$/;
     $tag= $1 ? "t$1" : shift || 'tag', next if $arg =~ m/^-t(\w+)?$/;
@@ -89,16 +90,26 @@ while (@ARGV) {
   ($hour,$min,$sec) = split ':', $time;
 
   printf "%s at $time ?\n", $date if $dbug;
-  if ($date =~ m|/|) { # date of form 07/28/97
-    ($mon,$mday,$year) = split '/', $date;
+  if ($date =~ m|/|) { # date of form 07/28/97 (US style)
+     ($mon,$mday,$year) = split '/', $date;
+     if ($mon > 12) { # date of form 1997/7/28 (EU style)
+        ($year,$mon,$mday) = split '/', $date;
+     }
      $year ||= $yy;
-    $tic= timelocal($sec,$min,$hour,$mday,$mon-1,$year);
+     $tic= timelocal($sec,$min,$hour,$mday,$mon-1,$year);
+  }
+  elsif ($date =~ m|\.|) { # date of form 28.07.97 (Swiss style)
+     ($mday,$mon,$year) = split '\.', $date;
+     if ($mon > 12) { # date of form 7.28.97 (US style)
+        ($mon,$mday,$year) = split '\.', $date;
+     }
+     $year ||= $yy;
+     $year += 100 if ($year < $yy);
+     #$yr4 = $year + 1900 if ($year < 70);
+     $tic= timelocal($sec,$min,$hour,$mday,$mon-1,$year);
   }
   elsif ($date =~ m|\d-\d|) { # date of form 2020-04-15 03:56:24
     ($year,$mon,$mday) = split '-', $date;
-    if ($ARGV[0] =~ m/\:/) { $time = shift; 
-      ($hour,$min,$sec) = split ':', $time;
-    }
     $tic= timelocal($sec,$min,$hour,$mday,$mon-1,$year);
   }
   elsif ($date =~ /^W*H(\d+.*)/) {
@@ -139,6 +150,8 @@ sub affiche {
    my $period = $dim * 24; # 8765.81277 / 12;
    $rev_id = int($yweek) <<2;
    $low_id = int(($wday+($hour/24)+$min/(24*60))*4/6); # frequency : 4/6
+   my $revision = ($rev_id + $low_id) / 100;
+   my $version = sprintf '%.1f.%d',int($rev_id/10)/10,$rev_id%10+$low_id;
   if ($tag =~ /t(\d+)$/o) {
     $f=int(0.99999-log($1/3600)/log(10));
     $d=4+$f+1;
@@ -235,8 +248,11 @@ sub affiche {
   } elsif ($id) {
     printf "ID:%4s\n",
          &base36(int($yhour/$_1yr * 36**4)), # 18 sec accuracy
+  } elsif ($rcs) {
+    printf qq'# \$Id: %s,v %s %-4d-%d-%02d %-2d:%02d:%02d %s Exp \$\n',
+     $rcs, $version,$year+1900,$mon+1,$mday,$hour,$min,$sec,$ENV{USER};
   } elsif ($what) {
-    printf "# %s %d%s @(%s) %s : %-2d-%s-%02d (%s) %-2d:%02d:%02d - WW%2d [%s]\n",
+    printf "# %s %d%s @(%s) %s : %-02d-%s-%02d (%s) %-2d:%02d:%02d - WW%2d [%s]\n",
      $what,$yhour, chr(ord('a')+$low_id),'#',$ORG,
      $mday,$MoY[$mon],$year%100,$MSGID,
      $hour,$min,$sec,
@@ -294,4 +310,6 @@ sub hday { # hash of the day
 
 
 do{$|=1;print "Press any key to continue ...";local$_=<STDIN>} unless defined $ENV{SHLVL} ;
-exit 1;
+exit $?;
+
+1;

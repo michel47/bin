@@ -11,7 +11,7 @@ REPO="$1"
 #fi
 
 qm=$(echo "IPFS is active" | ipfs add --offline -Q 2>/dev/null) && echo "qm: $qm"
-qm=$(echo "IPFS is active" | ipfs add -n -Q --hash id) || qm='bafkqad2jkbdfgidjomqgcy3unf3gkcq'
+qm=$(echo "IPFS is active" | ipfs add -n -Q --hash identity) || qm='bafkqad2jkbdfgidjomqgcy3unf3gkcq'
 # ------------------------------------------------------
 if [ "x$REPO" != "x" ]; then
 
