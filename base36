@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+
+my $decode = 0;
+if ($ARGV[0] eq '-d') {
+   $decode++;
+   shift;
+}
+
+while (<>) {
+  chomp;
+  $_ = decode_mbase($_) if ($decode);
+  printf "k%s\n",lc encode_base36($_);
+}
+
+exit $?;
+
+
+sub decode_mbase {
+  my $qm = shift;
+  my $bin;
+  if ($qm =~ m/^z/) {
+    $bin = &decode_base58(substr($qm,1));
+  } elsif ($qm =~ m/^b/) {
+    $bin = &decode_base32(substr($qm,1));
+  } elsif ($qm =~ m/^f/) {
+    $bin = unpack'H*',substr($qm,1);
+  } else {
+    $bin = &decode_base58($qm);
+  }
+  return $bin;
+}
+
+
+sub decode_base58 {
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $s = $_[0];
+  # $e58 =~ tr/a-km-zA-HJ-NP-Z/A-HJ-NP-Za-km-z/;
+  $s =~ tr/A-HJ-NP-Za-km-zIO0l/a-km-zA-HJ-NP-ZiooL/;
+  my $bint = Encode::Base58::BigInt::decode_base58($s);
+  my $bin = Math::BigInt->new($bint)->as_bytes();
+  return $bin;
+}
+
+sub decode_base32 {
+  use MIME::Base32 qw();
+  my $bin = MIME::Base32::decode($_[0]);
+  return $bin;
+}
+
+sub encode_base36 {
+  use Math::BigInt;
+  use Math::Base36 qw();
+  my $n = Math::BigInt->from_bytes(shift);
+  my $k36 = Math::Base36::encode_base36($n,@_);
+  #$k36 =~ y,0-9A-Z,A-Z0-9,;
+  return $k36;
+}
+
+1;
