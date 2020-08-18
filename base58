@@ -16,6 +16,10 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
   else                  { die "Unrecognized switch: $_\n"; }
 
 }
+#understand variable=value on the command line...
+eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
+#--------------------------------
+
 
 local $/ = undef;
 my $buf = <>;
@@ -23,13 +27,12 @@ $buf = decode_mbase($buf) if ($decode);
 printf "buf: f%s\n",unpack'H*',$buf if ($verbose|$dbug);
 if ($noh) {
    $buf = substr($buf,2) if (substr($buf,0,1) == "\01");
-   printf "K%s\n",&encode_base36($buf);
+   printf "%s\n",&encode_base58($buf);
 } else {
-   printf "k%s\n",lc &encode_base36($buf);
+   printf "z%s\n",&encode_base58($buf);
 }
 
 exit $?;
-
 
 sub decode_mbase {
   my $qm = shift;
@@ -37,11 +40,15 @@ sub decode_mbase {
   my $bin;
   if ($qm =~ m/^z/) {
     $bin = &decode_base58(substr($qm,1));
+  } elsif ($qm =~ m/^Z/i) {
+    $bin = &decode_base58f(substr($qm,1));
   } elsif ($qm =~ m/^b/i) {
     $bin = &decode_base32(lc substr($qm,1));
   } elsif ($qm =~ m/^k/i) {
     $bin = &decode_base36(lc substr($qm,1));
-  } elsif ($qm =~ m/^f/) {
+  } elsif ($qm =~ m/^[mu]/) {
+    $bin = &decode_base64(substr($qm,1));
+  } elsif ($qm =~ m/^f/) { # hex
     $bin = pack'H*',substr($qm,1);
   } else {
     $bin = &decode_base58($qm);
@@ -49,6 +56,15 @@ sub decode_mbase {
   return $bin;
 }
 
+sub encode_base58 { # btc
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $bin = join'',@_;
+  my $bint = Math::BigInt->from_bytes($bin);
+  my $h58 = Encode::Base58::BigInt::encode_base58($bint);
+  $h58 =~ tr/a-km-zA-HJ-NP-Z/A-HJ-NP-Za-km-z/;
+  return $h58;
+}
 
 sub decode_base58 {
   use Math::BigInt;
@@ -58,6 +74,20 @@ sub decode_base58 {
   $s =~ tr/A-HJ-NP-Za-km-zIO0l/a-km-zA-HJ-NP-ZiooL/;
   my $bint = Encode::Base58::BigInt::decode_base58($s);
   my $bin = Math::BigInt->new($bint)->as_bytes();
+  return $bin;
+}
+
+sub decode_base58f {
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $bint = Encode::Base58::BigInt::decode_base58($_[0]);
+  my $bin = Math::BigInt->new($bint)->as_bytes();
+  return $bin;
+}
+
+sub decode_base32 {
+  use MIME::Base32 qw();
+  my $bin = MIME::Base32::decode($_[0]);
   return $bin;
 }
 
@@ -71,19 +101,14 @@ sub decode_base36 {
   return $bin;
 }
 
-sub decode_base32 {
-  use MIME::Base32 qw();
-  my $bin = MIME::Base32::decode($_[0]);
+sub decode_base64 {
+  use MIME::Base64 qw();
+  my $m64 = shift;
+  if ($m64 =~ m/[\-_]/) {
+     $m64 =~ y,-_,+/,;
+  }
+  my $bin = MIME::Base64::decode_base64($m64);
   return $bin;
 }
 
-sub encode_base36 {
-  use Math::BigInt;
-  use Math::Base36 qw();
-  my $n = Math::BigInt->from_bytes(shift);
-  my $k36 = Math::Base36::encode_base36($n,@_);
-  #$k36 =~ y,0-9A-Z,A-Z0-9,;
-  return $k36;
-}
 
-1;
