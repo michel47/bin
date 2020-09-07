@@ -1,0 +1,6 @@
+#!/bin/dash
+
+tic=$(date +%s)
+echo "$tic: $*" >> $HOME/my/etc/xdg-open.log
+exec /usr/bin/xdg-open "$1" 1> $HOME/my/etc/xdg-open-cmd.log 2>&1
+exit $?;
