@@ -1,0 +1,5 @@
+#
+
+vi -f  -g /tmp/fori.pl
+exec perl /tmp/fori.pl $*
+
