@@ -1,0 +1,409 @@
+#!/usr/bin/perl
+
+# format cidv1 :
+# 01551220 ...
+
+$ENV{IPFS_PATH} = $ENV{HOME}.'/.ipfs' unless exists $ENV{IPFS_PATH};
+
+# echo -n '' | ipfs add -n -Q # QmbFMke1KXqnYyBBWxB74N4c5SBnJMVAiMNRcGu6x1AwQH
+# echo "Hello World!" | ipfs add -n -Q # QmfM2r8seH2GiRaC4esTjeraXEachRt8ZsSeGaWTPLyMoG
+
+my $QRY = shift;
+printf "// IPFS_PATH : %s\n",$ENV{IPFS_PATH};
+my $dotip = &get_localip();
+
+while (1) {
+   my $mhash = 'QmfM2r8seH2GiRaC4esTjeraXEachRt8ZsSeGaWTPLyMoG';
+   if ($QRY) {
+     $mhash = $QRY;
+     $QRY = 'x';
+   } else {
+     $mhash = <STDIN>; chomp($mhash);
+     last if ($mhash eq 'exit' || $mhash =~ /^\.?\s*$/);
+   } 
+   $mhash =~ s,https?://.*/ipfs/,,;
+   printf "// %s :\n",$mhash;
+   last if ($mhash eq 'last' || $mhash eq 'x' || $mhash eq 'q');
+   my $bin;
+   if ($mhash =~ m/^Z/) {
+      my $mh58 = substr($mhash,1);
+      $bin = &decode_base58f($mh58);
+      printf "   mh58: Z.%s (%uc, %uB)\n",$mh58,length($mh58),length($bin);
+      printf "   hash58: %s\n",&encode_base58(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash32: %s\n",uc&encode_base32(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash16: %s\n",unpack('H*',substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+   } elsif ($mhash =~ m/^z/) {
+      my $mh58 = substr($mhash,1);
+      $bin = &decode_base58($mh58);
+      printf "   mh58: z.%s (%uc, %uB)\n",$mh58,length($mh58),length($bin);
+      printf "   hash58: %s\n",&encode_base58(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash32: %s\n",uc&encode_base32(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash16: %s\n",unpack('H*',substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+   } elsif ($mhash =~ m/^k/) {
+      my $mh36 = substr($mhash,1);
+      $bin = &decode_base36(lc$mh36);
+      printf "// mh36: k.%s (%uc, %uB)\n",$mh36,length($mh36),length($bin);
+      printf "   hash58: %s\n",&encode_base58(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash36: %s\n",lc&encode_base36(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash32: %s\n",uc&encode_base32(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash16: %s\n",unpack('H*',substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+   } elsif ($mhash =~ m/^b/) {
+      my $mh32 = substr($mhash,1);
+      $bin = &decode_base32(lc$mh32);
+      printf "// mh32: b.%s (%uc, %uB)\n",$mh32,length($mh32),length($bin);
+      printf "   hash58: %s\n",&encode_base58(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash36: %s\n",lc&encode_base36(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash32: %s\n",uc&encode_base32(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash16: %s\n",unpack('H*',substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+
+   } elsif ($mhash =~ m/^f/) {
+      my $mh16 = substr($mhash,1);
+      $bin = pack'H*',$mh16;
+      printf "// mh16: f.%s (%uc, %uB)\n",$mh16,length($mh16),length($bin);
+      printf "   hash58: %s\n",&encode_base58(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash32: %s\n",uc&encode_base32(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash16: %s\n",unpack('H*',substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+   } elsif ($mhash =~ m/^[mu]/) {
+      my $mh64 = substr($mhash,1);
+      if ($mhash =~ m/^u/) {
+         $bin = &decode_base64u($mh64);
+      } else {
+         $bin = &decode_base64m($mh64);
+      }
+      printf "// mh64: m.%s (%uc, %uB)\n",$mh64,length($mh64),length($bin);
+      printf "   hash58: %s\n",&encode_base58(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash36: %s\n",lc&encode_base36(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash32: %s\n",uc&encode_base32(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash16: %s\n",unpack('H*',substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+   } else {
+      $bin = &decode_base58($mhash);
+      my $mh58 = $mhash;
+      printf "// qm58: %s (%uc, %uB)\n",$mh58,length($mh58),length($bin);
+      printf "   hash58: %s\n",&encode_base58(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash32: %s\n",uc&encode_base32(substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+      printf "   hash16: %s\n",unpack('H*',substr($bin,2)) if (substr($bin,0,1) eq "\x01");
+   }
+   my $payload = $bin;
+   if (substr($bin,0,4) eq "\x01\x55\x00\x35") { # ID53 ??
+      my $hdr = substr($payload,0,4,'');
+      printf "   mh16: f.%s:%s (%u-bits)\n",unpack('H*',$hdr),unpack('H*',$payload),length($payload)*8;
+   } elsif (substr($bin,0,2) eq "\x12\x20") { # Qm
+      my $hdr = "\x01\x70".substr($payload,0,2,'');
+      printf "   mh16: f.%s:%s (%u-bits)\n",unpack('H*',$hdr),unpack('H*',$payload),length($payload)*8;
+   } elsif (substr($bin,0,1) eq "\x01") { # cid-version 1
+      my $hdr = substr($payload,0,2,'');
+      my $halign = length($payload) %4;
+      if ($halign > 0) {
+         $hdr .= substr($payload,0,$halign,'');
+      } else {
+         $halign = 4;
+         $hdr .= substr($payload,0,4,'');
+      }
+      printf "   mh16: f.%s:%s (%u-bits)\n",unpack('H*',$hdr),unpack('H*',$payload),length($payload)*8;
+      my $mh32 = &encode_base32($bin);
+      my $p = 3 + $halign * 3 / 2;
+      printf "   mh32: b.%s:%s\n",substr($mh32,0,$p),substr($mh32,$p);
+   } else {
+      my $hdr = substr($payload,0,2,'');
+      printf "   mh16: f.%s:%s (%u-bits)\n",unpack('H*',$hdr),unpack('H*',$payload),length($payload)*8;
+   }
+
+   printf qq'   bin: "%s"\n',&enc($bin);
+   my $mh58 = &encode_base58($bin);
+   printf "   mh58: z%s\n",$mh58;
+   my $mh36 = &encode_base36($bin);
+   printf "   mh36: k%s\n",$mh36;
+
+   use Proquint qw(hex2proquint);
+   if ( (length($bin) % 4) == 0) {
+   my $quint = hex2proquint(unpack'H*',$bin);
+   printf "   quint:%s\n",$quint;
+   }
+   my $mh32 = &encode_base32($bin);
+   my $magic2 = substr($bin,0,2);
+   my $magic3 = substr($bin.0,3);
+
+   printf "http://ipfs.blockRing™.ml/ipfs/%s\n",$mhash;
+   printf "http://%s:8080/ipfs/%s\n",$dotip,$mhash;
+   if ($magic2 eq "\x12\x20") {
+     printf "http://yoogle.com:8080/ipfs/b%s\n",&encode_base32("\x01\x70".$bin);
+     my $mh32 = &encode_base32("\x01\x70".$bin);
+     if (length($mh32) < 64) {
+       printf "http://b%s.ipfs.dweb.link/\n",$mh32
+     }
+   } else {
+      if (length($mh32) < 64) {
+         printf "http://b%s.ipfs.dweb.link/\n",&encode_base32($bin);
+      } else {
+        my $subdom = sprintf 'b%s.',$mh32;
+        $subdom =~ s,([^/.]{63}\.),.\1,g;
+        printf "http://%sipfs.dweb.link/\n",$subdom;
+     }
+   }
+   my $k236 = lc &encode_base36($bin);
+   if (length($k236) > 64) {
+     my $subdom = sprintf 'k%s.',$k236;
+     $subdom =~ s,([^/.]{63}\.),.\1,g;
+     printf "http://%sipfs.localhost:8080/\n",$subdom;
+   } else {
+     printf "http://k%s.ipfs.dweb.link/\n",$k236;
+   }
+
+   if ($magic2 eq "\x12\x20" || $magic3 eq "\x01\x55\x12") { # SHA256
+      printf "http://ipns.co/z%s\n",&encode_base58($bin);
+      printf "http://127.0.0.1:8080/ipfs/f%s\n",unpack'H*',$bin;
+   } else {
+      printf "http://gateway.ipfs.io/ipfs/z%s\n",&encode_base58($bin);
+      printf "http://ipns.co/f%s\n",unpack'H*',$bin;
+   }
+   printf "http://siderus.io/ipfs/z%s\n",&encode_base58($bin);
+   printf "http://hardbin.com/ipfs/Z%s\n",&encode_base58f($bin);
+   printf "https://cloudflare-ipfs.com/ipfs/b%s\n",$mh32;
+   printf "https://b%s.cf-ipfs.com/\n",$mh32;
+   
+   my %seen = ();
+   my $found = undef;
+   my @iplist = &loadlist('/tmp/ipfs-repos.txt');
+   my $REPO = $ENV{HOME}.'/.../ipfs/repo';
+   #use YAML::Syck qw(Dump); printf "%s.\n",Dump(\@iplist); 
+   foreach my $repo ($ENV{IPFS_PATH}, $ENV{HOME}.'/.ipfs',
+                  $REPO.'/PERMLINK',
+                  $REPO.'/INFINITE',
+                  $REPO.'/IMAGES',
+                   @iplists,
+                  '/media/'.$ENV{USER}.'/1TB/PERMLINK',
+                  '/media/'.$ENV{USER}.'/1TB/INFINITE',
+                  #'/media/'.$ENV{USER}.'/3TB/IPFS',
+                  #'/media/'.$ENV{USER}.'/3TB/IPFS/PUBLIC',
+                  '/data/IPFS/PERMLINK',
+                  '/data/IPFS/LOSTNFOUND',
+                  '/data/IPFS/Tommy',
+                  '/media/'.$ENV{USER}.'/cloud/Tommy/.ipfs',
+                  '/media/'.$ENV{USER}.'/cloud/Tommy/public_html/ipfs',
+                  '/usr/local/share/doc/civetweb/public_html/../.ipfs',
+                       ) {
+      next if $seen{$repo}++;
+      next unless -d $repo;
+      my $file = sprintf"%s/blocks/%s/%s.data",$repo,
+         substr(uc$mh32,-3,2),uc$mh32;
+      next if $seen{$file}++;
+      if (-e $file) {
+         $found = $file;
+         printf "file:  %s\n",$file;
+      }
+   }
+   if (! $found)  {
+         substr(uc$mh32,-3,2),uc$mh32;
+      printf 'file:  $IPFS_PATH/blocks/%s/%s.data'."\n",substr(uc$mh32,-3,2),uc$mh32;
+      printf "find -L /media/%s/4TB/IPFS/*/blocks -name %s.\*\n",$ENV{USER}, uc$mh32;
+      printf "find -L /media/%s/4TB/IPFS/L*N*F*/blocks -name %s.\*\n",$ENV{USER},uc$mh32;
+     printf "locate -A %s %s \n", substr(uc$mh32,-3,2),substr(uc$mh32,0,9);
+
+
+   } else {
+      my $mh32u = uc$mh32;
+         my ($key,$type);
+         if ($mh32u =~ m/^CIQ/) {
+           $cidv = 0;
+           $cid = pack'H*','0170';
+           $type = 'CIQ';
+           $key = substr($mh32u,3,2)
+         } elsif ($mh32u =~ m/^(AF[KY](?:REI|BCF))/) {
+           $cidv = 1;
+           $cid = $magic2;
+           $type = $1;
+           $key = substr($mh32u,6,2);
+         #} elsif ($mh32u =~ m/^(AF[KY](?:AA))/) {
+         } else {
+           $cid = pack'H*','0155' unless $cid;
+           $type = substr($mh32u,0,3);
+           $key = substr($mh32u,3,3);
+         }
+         printf "locate -A %s/%s %s .data\n", substr(uc$mh32,-3,2),$type,$key;
+
+     my $file = $found;
+     my $size = -s $file;
+     if ($size < 64) {
+        local *F; open F,'<',$file; local $/ = undef; my $data = <F>; close F;
+        if (1) {
+           my $sumid = $cid . "\x00" . &varint(length($data)) . $data;
+           printf "datasc: f%s\n",&printable($sumid);
+           printf "data16: f%s\n",unpack('H*',$sumid);
+           printf "data32: b%s\n",&encode_base32($sumid);
+           printf "data36: k%s\n",&encode_base36($sumid);
+           printf "data58: z%s\n",&encode_base58($sumid);
+        }
+        if (1) {
+           my $data0 = substr($data,4);
+           my $dlen = length($data0);
+           $dlen = 2 if ($dlen <= 2);
+           my $vlen = &varint($dlen - 2);
+           my $data1 = "\x08\x02" . $data0 . "\x18".$vlen;
+           my $vlen1 = &varint(length($data1)); # 12xx header + 18xx trailer (size)
+           my $data2 = "\x0a".$vlen1 . $data1;
+           my $vlen2 = &varint(length($data2)); # 0axx12xx header + 18xx trailer
+           my $sumid = $cid . "\x00" . $vlen2 . $data2;
+           printf "content16: %s\n",unpack('H*',$data1);
+           printf "content64u: %s\n",&encode_base64u($data1);
+           printf "file16: f%s\n",unpack('H*',$sumid);
+           printf "file32: b%s\n",&encode_base32($sumid);
+           printf "file36: k%s\n",&encode_base36($sumid);
+           printf "file58: z%s\n",&encode_base58($sumid);
+        }
+        if (0) {
+           my $data00 = $data;
+           $data00 =~ s/\x08\x04/\x08\x00/;
+           my $sumid = $cid . "\x00" . &varint(length($data)) . $data00;
+           printf "raw16: f%s\n",unpack('H*',$sumid);
+           printf "raw58: z%s\n",&encode_base58($sumid);
+        }
+     }
+  }
+
+}
+exit $?;
+
+# --------------------------------------------
+sub loadlist {
+  my $file = shift;
+  local *F; open F,'<',$file; local $/ = "\n";
+  my @list = map { chomp; $_ } grep !/^#/, (<F>); close F;
+  return @list;
+}
+# --------------------------------------------
+sub decode_base58f {
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $s = $_[0];
+  my $bint = Encode::Base58::BigInt::decode_base58($s);
+  my $bin = Math::BigInt->new($bint)->as_bytes();
+  return $bin;
+}
+sub encode_base58f {
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $bin = join'',@_;
+  my $bint = Math::BigInt->from_bytes($bin);
+  my $h58 = Encode::Base58::BigInt::encode_base58($bint);
+  return $h58;
+}
+# ----
+sub decode_base58 {
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $s = $_[0];
+  # $h58 =~ tr/a-km-zA-HJ-NP-Z/A-HJ-NP-Za-km-z/;
+  $s =~ tr/A-HJ-NP-Za-km-z/a-km-zA-HJ-NP-Z/;
+  my $bint = Encode::Base58::BigInt::decode_base58($s);
+  my $bin = Math::BigInt->new($bint)->as_bytes();
+  return $bin;
+}
+sub encode_base58 {
+  use Math::BigInt;
+  use Encode::Base58::BigInt qw();
+  my $bin = join'',@_;
+  my $bint = Math::BigInt->from_bytes($bin);
+  my $h58 = Encode::Base58::BigInt::encode_base58($bint);
+  $h58 =~ tr/a-km-zA-HJ-NP-Z/A-HJ-NP-Za-km-z/;
+  return $h58;
+}
+# --------------------------------------------
+
+sub decode_base32 {
+  use MIME::Base32 qw();
+  my $bin = MIME::Base32::decode($_[0]);
+  return $bin;
+}
+
+sub encode_base32 {
+  use MIME::Base32 qw();
+  my $mh32 = lc MIME::Base32::encode($_[0]);
+  return $mh32;
+}
+# ------------------
+sub encode_base36 {
+  use Math::BigInt;
+  use Math::Base36 qw();
+  my $n = Math::BigInt->from_bytes(shift);
+  my $k36 = Math::Base36::encode_base36($n,@_);
+  #$k36 =~ y,0-9A-Z,A-Z0-9,;
+  return $k36;
+}
+sub decode_base36 {
+  use Math::BigInt;
+  use Math::Base36 qw();
+  my $n = Math::Base36::decode_base36($_[0]);
+  my $bin = Math::BigInt->new($n)->as_bytes();
+  return $bin
+}
+# ------------------
+sub encode_base64u {
+  use MIME::Base64 qw();
+  my $u64 = MIME::Base64::encode_base64($_[0],'');
+  $u64 =~ y,+/,-_,;
+  return $u64;
+}
+sub decode_base64u {
+  use MIME::Base64 qw();
+  my $s64 = $_[0];
+  $s64 =~ y,-_,+/,;
+  my $bin = MIME::Base64::decode_base64($s64);
+  return $bin;
+}
+sub encode_base64m {
+  use MIME::Base64 qw();
+  my $m64 = MIME::Base64::encode_base64($_[0],'');
+  return $m64;
+}
+sub decode_base64m {
+  use MIME::Base64 qw();
+  my $bin = MIME::Base64::decode_base64($_[0]);
+  return $bin;
+}
+# ------------------
+
+sub enc {
+ my $buf = shift;
+ #$buf =~ tr/\000-\034\134\177-\377//d;
+ #$buf =~ s/\</\&lt;/g; # XML safe !
+ $buf =~ s/([\000-\032\034\`\<\>\177-\377])/sprintf('\\%02x',ord($1))/eg; # html-ize
+ return $buf;
+}
+
+sub get_localip {
+    use IO::Socket::INET qw();
+    # making a connectionto a.root-servers.net
+
+    # A side-effect of making a socket connection is that our IP address
+    # is available from the 'sockhost' method
+    my $socket = IO::Socket::INET->new(
+        Proto       => 'udp',
+        PeerAddr    => '198.41.0.4', # a.root-servers.net
+        PeerPort    => '53', # DNS
+    );
+    return '0.0.0.0' unless $socket;
+    my $local_ip = $socket->sockhost;
+
+    return $local_ip;
+}
+
+sub varint {
+  my $i = shift;
+  my $bin = pack'w',$i; # Perl BER compressed integer
+  # reverse the order to make is compatible with IPFS varint !
+  my @C = reverse unpack("C*",$bin);
+  # clear msb on last nibble
+  my $vint = pack'C*', map { ($_ == $#C) ? (0x7F & $C[$_]) : (0x80 | $C[$_]) } (0 .. $#C);
+  return $vint;
+}
+
+sub printable {
+  my $buf = shift;
+  $buf =~ s/\n/\\n/g; #\124\156
+  $buf =~ tr/\000-\034\177-\377/./;
+  return $buf;
+}
+
+
+1;
+
