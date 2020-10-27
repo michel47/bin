@@ -1,0 +1,47 @@
+#
+
+# intent:
+#  add hash of files to be removed to the qmremoved.log
+IPFS_PATH=${IPFS_PATH:-$HOME/.ipfs}
+if [ ! -d $HOME/.../mutables ]; then mkdir -p $HOME/.../mutables; fi
+if [ ! -d $HOME/.../sets ]; then mkdir -p $HOME/.../sets; fi
+echo "--- # $0"
+for f in $*; do
+if [ -e "$f" ]; then
+echo f: $f
+qm=$(ipfs --offline add -Q -n $f)
+zb=$(ipfs --offline add -Q -n --raw-leaves --cid-base base58btc $f)
+qm32=$(ipfs --offline add -Q -n --cid-base base32 $f | tr '[a-z]' '[A-Z]' | cut -c2-)
+else
+qm=$f
+qm32=$(echo $qm | mbase -d | xyml ciq)
+shard=$(echo $qm32 | cut -c53-54)
+if [ -e $IPFS_PATH/blocks/$shard/$qm32.data ]; then
+  f=$IPFS_PATH/blocks/$shard/$qm32.data 
+fi
+zb=$(ipfs cat $qm | ipfs --offline add -Q -n --raw-leaves --cid-base base58btc )
+fi
+echo f: $f
+echo qm: $qm
+echo zb: $zb
+if [ "x$qm" != 'x' ]; then
+echo $qm >> $HOME/.../mutables/qmremoved.log
+echo $qm: $zb >> $HOME/.../sets/qm2zb.log
+echo tic: $(date +%s)
+ipfs --timeout 5s dht findprovs -n 1 /ipfs/$qm
+
+qm32=$(echo $qm | mbase -d | xyml ciq)
+shard=$(echo $qm32 | cut -c53-54)
+ls -lf $HOME/.../ipfs/repo/*/blocks/$shard/$qm32.* $IPFS_PATH/blocks/$shard/$qm32.data  
+if [ -e $IPFS_PATH/blocks/$shard/$qm32.data ]; then
+  rm -f $IPFS_PATH/blocks/$shard/$qm32.data 
+fi
+
+
+
+
+#find $HOME/.../ipfs/repo/ -name "$qm32.*" -delete -print
+
+fi
+
+done
