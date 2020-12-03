@@ -1,0 +1,19 @@
+#
+
+if [ "x$1" != 'x' ]; then
+  hint="$1"
+else
+  hint=$(readlink -f "$(pwd)")
+fi
+#echo hint: $hint 1>&2
+
+case $hint in
+*/fair*) label=fair;;
+*/g*) label=gq;;
+*/*ring*) label=br;;
+*/holo*) label=hl;;
+*michel*) label=myc;;
+*) label=white
+esac
+
+echo $label
