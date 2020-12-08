@@ -1,20 +1,43 @@
 #!/usr/bin/perl
 
-#use if (exists $ENV{GRADUAL_HOME}), lib => $ENV{GRADUAL_HOME};
-#use DVS qw(version);
+my $flat = 0;
+my $nospace = 1;
+while (@ARGV && $ARGV[0] =~ m/^-/)
+{
+  $_ = shift;
+  #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
+  if (/^-v(?:erbose)?/) { $verbose= 1; }
+  elsif (/^--?no?s(?:pace)?/) { $nospace= 1; }
+  elsif (/^--?s(?:pace)?/) { $nospace= 0; }
+  elsif (/^--?f(?:lat)?/) { $flat= 1; }
+  else                  { die "Unrecognized switch: $_\n"; }
 
-my $file = shift || __FILE__;
+}
+#understand variable=value on the command line...
+eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
+
+
+my $file = shift;
+die unless -f $file;
 my @ver = &version($file);
 printf "file: %s\n",$file;
 my $p = rindex($file,'.');
 my $ext = ($p>0) ? substr($file,$p+1) : 'blob';
-my $bname = ($p>0) ? substr($file,0,$p) : $file; $bname =~ s/v\d\..*//;
-#print "bname: $bname\n";
+my $bname = ($p>0) ? substr($file,0,$p) : $file;
+   $bname =~ s,^\./,,;
+   $bname =~ s,_+v\d\.\d+-\w+$,,;
+print "bname: $bname\n";
 #print "ext: $ext\n";
-
+if ($flat) {
+ $bname =~ s,/,-,g;
+}
+if ($nospace) {
+ $bname =~ s, +,-,g;
+}
 $name = sprintf '%s_v%.2f-%s.%s',$bname,@ver,$ext;
 printf "mv %s %s\n",$file,$name;
-rename $file,$name or warn $!;
+
+rename $file, $name or warn $!;
 
 exit $?;
 
