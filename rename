@@ -18,7 +18,13 @@ eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
 
 
 my $file = shift;
-die unless -f $file;
+if ( ! -f $file) {
+  printf "warn: ! -f %s\n",$file;
+  $file =~ s/\.mp4/.mkv/;
+  if (! -f $file) {
+    die;
+  }
+}
 my @ver = &version($file);
 printf "file: %s\n",$file;
 my $p = rindex($file,'.');
@@ -32,10 +38,16 @@ if ($flat) {
  $bname =~ s,/,-,g;
 }
 if ($nospace) {
+ $bname =~ s, - ,_,g;
  $bname =~ s, +,-,g;
 }
+ $bname =~ s,&,﹠,g;
+ $bname =~ s,&,%26,g;
+ $bname =~ s,",＂,g;
+ $bname =~ s,',’,g;
 $name = sprintf '%s_v%.2f-%s.%s',$bname,@ver,$ext;
-printf "mv %s %s\n",$file,$name;
+printf "name: %s\n",$name;
+printf "cmd: <-\n mv %s %s\n",$file,$name;
 
 rename $file, $name or warn $!;
 
@@ -43,10 +55,10 @@ exit $?;
 
 # -----------------------------------------------------------------------
 sub version {
-  #y ($atime,$mtime,$ctime) = (lstat($_[0]))[8,9,10];
-  my @times = sort { $a <=> $b } (lstat($_[0]))[9,10]; # ctime,mtime
-  my $vtime = $times[-1]; # biggest time...
-  my $version = &rev($vtime);
+  my @times = (lstat($_[0]))[8,9,10]; # atime,ctime,mtime
+  my $etime = (sort { $a <=> $b } (@time))[0];
+  my $vtime = (sort { $a <=> $b} (@time[1,2]))[-1]; # biggest ctime,mtime...
+  my $version = &rev($etime);
 
   if (wantarray) {
      my $shk = &get_shake(160,$_[0]);

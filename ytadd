@@ -1,12 +1,16 @@
 #
 
+# intent add current url to yturl.txt
+
+
 if echo "$1" | grep -q 'https*:/'; then
   url="$1"
   shift
 fi
 tag="$*"
-export IPFS_PATH=${IPFS_PATH:-/media/IPFS/MEDIA}
-store=${IPFS_PATH}/filestore
+export IPFS_PATH=${IPFS_PATH:-$HOME/.../ipfs/*/MEDIA}
+store=${IPFS_PATH}/filestoreA
+if [ ! -d $store ]; then exit $(expr $$ % 251); fi
 cd $store
 
 echo "--- # $0"
@@ -14,55 +18,84 @@ echo "tag: \"$tag\""
 echo "store: \"$store\""
 
 if [ "x$url" = 'x' ]; then
+
+if wmctrl -a "YouTube -"; then
+browser=" YouTube -"
+else
 browser=" - Brave"
 #wmctrl -a $browser
+fi
 
 WID=$(xdotool search --name "$browser" | tail -1)
 echo "WID: $WID"
 name="$(xdotool getwindowname $WID)"
 echo "$WID: $name"
 xdotool windowfocus $WID 
+#xdotool key "Alt+Tab"
 xdotool getmouselocation --shell | sed -e 's/=/: /'
 # see [*](https://support.brave.com/hc/en-us/articles/360032272171-What-keyboard-shortcuts-can-I-use-in-Brave-)
-#xdotool key "Alt+Tab"
-xdotool key "alt+d"
-xdotool key "ctrl+l"
-xdotool key "ctrl+a"
 #xdotool Click 3
+xdotool key "alt+d"
+xdotool key 0xff1b
+xdotool key "ctrl+l"
+xdotool key 0xff1b
 xdotool key "ctrl+c"
-url=$(clipit -c)
+xdotool key "ctrl+a"
+xdotool key "ctrl+c"
+url=$(xclip -o -selection c )
 fi
 echo "URL: $url"
-echo $url >> /media/IPFS/MEDIA/filestore/yturls.txt
 
 tic=$(date +%s)
 #ip=$(curl -s https://dyn℠.ml/cgi-bin/remote_addr.pl)
+mtime=$(stat -c %Y ~/.ip)
+if expr $tic \- 3600 \> $mtime 1>/dev/null; then
 ip=$(curl -s https://postman-echo.com/ip?format=text)
+echo $ip > ~/.ip
+else
+ip=$(cat ~/.ip)
+fi
 echo ip: $ip
-
 
 main(){
 
 peerid=$(ipms config Identity.PeerID)
 echo peerid: $peerid
 
+if echo $url | grep -q -i "v=.*"; then
+ echo "youtube: $url"
+ vid=$(perl -e 'if ("'$url'" =~ m/v=([-\w]+)/) { print $1; }')
+else if echo $url | grep -q "ytnoad\."; then
+ vid=$(perl -e 'if ("'$url'" =~ m,#([-\w]+),) { print $1; }')
+ url="https://youtu.be/$vid"
+ echo "ytnoad: $url"
+else if echo $url | grep -q "youtu.be/.*"; then
+ echo "youtu.be: $url"
+ vid=$(perl -e 'if ("'$url'" =~ m,\.be/([-\w]+),) { print $1; }')
+else if echo $url | grep -q "bitchute.com/video/.*"; then
+ echo "bitchute: $url"
+ vid=$(perl -e 'if ("'$url'" =~ m,bitchute.com/([-\w]+),) { print $1; }')
+else if echo $url | grep -q "ytimg.com/.*"; then
+ vid=$(perl -e 'if ("'$url'" =~ m,ytimg.com/[^/]+/([^/]+),) { print $1; }')
+ url=https://youtu.be/$vid
+ echo "ytimg: $url"
+fi
+fi
+fi
+fi
+fi
+
+echo "noad_url: https://ytube.netlify.app/ytnoad.htm#$vid"
+echo "altc_url: https://altcensured.caom/watch?=$vid"
+
 eval "$(perl -S contkey.pl -y $url | eyml)"
 echo id7: $id7
 
-if echo $url | grep -q -i "v=.*"; then
- vid=$(perl -e 'if ("'$url'" =~ m/v=([-\w]+)/) { print $1; }')
-else if echo $url | grep -q "youtu.be/.*"; then
- vid=$(perl -e 'if ("'$url'" =~ m,\.be/([-\w]+),) { print $1; }')
-else if echo $url | grep -q "bitchute.com/video/.*"; then
- vid=$(perl -e 'if ("'$url'" =~ m,bitchute.com/([-\w]+),) { print $1; }')
+if [ "x$vid" == 'x' ]; then
+exit
 fi
-fi
-fi
-
-echo vid: $vid
-echo "url: https://ytube.netlify.app/ytnoad.htm#$vid"
-
-
+# --------------------------------------------
+echo $url >> /media/IPFS/MEDIA/filestore/yturls.txt
 # --------------------------------------------
 cat >ytadd.yml <<EOF
 --- # yt add: url ...

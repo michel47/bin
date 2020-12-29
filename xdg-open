@@ -1,6 +1,16 @@
 #!/bin/dash
 
+# intent:
+#  log url that are launched via xdg-open and display error if any ...
+#
+
 tic=$(date +%s)
 echo "$tic: $*" >> $HOME/my/etc/xdg-open.log
 exec /usr/bin/xdg-open "$1" 1> $HOME/my/etc/xdg-open-cmd.log 2>&1
+if [ -s $HOME/my/etc/xdg-open-cmd.log ]; then
+  cat $HOME/my/etc/xdg-open-cmd.log
+fi
 exit $?;
+
+
+# $Source: /my/shell/scripts/xdg-open$

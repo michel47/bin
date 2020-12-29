@@ -5,14 +5,14 @@ BEGIN {my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,0,$p):'.'}#for SITE.pm
 #
 # log any "one-line message" ...
 #
-# TBD have an option not to file to IPFS is node is down
+# TBD have an option not to file to IPFS if node is down
 
 # ------------------------------------------------------
 my $symb='log';
 my $desc='World Log System';
-my $metaf = $ENV{HOME}."/.brings/logs/$symb-meta.yml";
-my $file = $ENV{HOME}."/.brings/logs/$symb.md";
-my $idsf = $ENV{HOME}."/.brings/logs/${symb}-ids.yml";
+my $metaf = $ENV{HOME}."/.../logs/$symb-meta.yml";
+my $file = $ENV{HOME}."/.../logs/$symb.md";
+my $idsf = $ENV{HOME}."/.../logs/${symb}-ids.yml";
 # ------------------------------------------------------
 my $SYMB = uc $symb;
 my $TAG = $SYMB; $TAG =~ y/AEIOUY//d; $TAG= substr($TAG,0,3);

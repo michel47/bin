@@ -17,8 +17,10 @@ qm=$f
 qm32=$(echo $qm | mbase -d | xyml ciq)
 shard=$(echo $qm32 | cut -c53-54)
 if [ -e $IPFS_PATH/blocks/$shard/$qm32.data ]; then
+  # protobuf not exactly the file TODO fix
   f=$IPFS_PATH/blocks/$shard/$qm32.data 
 fi
+# need a faster zb computation ... TODO
 zb=$(ipfs cat $qm | ipfs --offline add -Q -n --raw-leaves --cid-base base58btc )
 fi
 echo f: $f
@@ -27,6 +29,7 @@ echo zb: $zb
 if [ "x$qm" != 'x' ]; then
 echo $qm >> $HOME/.../mutables/qmremoved.log
 echo $qm: $zb >> $HOME/.../sets/qm2zb.log
+echo $qm >> $HOME/etc/removed.mh58
 echo tic: $(date +%s)
 ipfs --timeout 5s dht findprovs -n 1 /ipfs/$qm
 

@@ -1,0 +1,35 @@
+#
+
+tic=$(date +%s)
+day=$(date +%j)
+
+pwd=$PWD;
+
+crontab -l > $HOME/etc/crontab-l.txt
+ipfs add $0 $HOME/etc/crontab-l.txt | perl -S stamped.pl >> $HOME/etc/stamped.log
+
+#cd $HOME/repo/github.com/covid19
+#sh ./daily.sh > daily.log 2>&1
+
+op=$(expr $day % 4);
+echo op: $op
+
+cd $HOME/.../ipfs
+cachedir=$HOME/.cache/duc
+
+case "$op" in
+ 0) echo duc index -d $cachedir/4TB.db -x /media/michelc/4TB;;
+ 1) duc index -d $cachedir/data.db -x /data;;
+ 2) duc index -d $cachedir/root.db -x /;;
+ *) duc index -d $cachedir/IPFS.db $HOME/.../ipfs/{usb,repo,hdd,DEDUP,};;
+esac
+
+
+# next time
+cd $pwd
+t=$(perl -S random.pl 2 | json_xs -f yaml -t string -e '$_ = $_->{rand}')
+m=$(echo "(( 22 + $t ) * 60)/1" | bc) &&echo $m
+at -f $0 now + $m minutes
+
+
+true; # $Source: /my/shell/scripts/daily.sh $
