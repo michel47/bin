@@ -1,0 +1,188 @@
+# 
+
+intent="make discoverable hashes !"
+
+# bootstrap !
+core=myc
+XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
+cachedir=$XDG_CACHE_HOME/${core}Tools
+if [ ! -d $cachedir ]; then
+  mkdir -p $cachedir
+fi
+
+# get dependencies ...:
+if ! which base36.pl >/dev/null; then
+ if [ ! -d $cachedir/bin ]; then mkdir $cachedir/bin; fi
+ ipfs get -o $cachedir/bin/base36.pl /ipfs/QmTgo1oLW8sqhK3gr7p6oSYBkx7JcnGCpAxqA7XiGv8PJC
+ chmod a+x  $cachedir/bin/base36.pl
+ if ! which base36.pl >/dev/null; then
+   export PATH=$PATH:$cachedir/bin
+ fi
+fi
+
+
+
+peerid=$(ipfs config Identity.PeerID) && echo "peerid: $peerid"
+hashesf=$(locate -n 1 -b \\special-hashes.txt) && echo "hashesf: $hashesf"
+
+cat <<EOT | sh /dev/stdin | tee $hashesf
+# history=z6CfPtEY5uJ2QozjweVm2wcwdEHGq263NA1FqCHKY6NZ
+echo "$intent" | ipfs add --offline -Q 
+# -------------------------------------------------------
+echo "I had COVID-19" | ipfs add --offline -Q -n
+echo "I upgraded" | ipfs add --offline -Q
+echo "I am $peerid's friend" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo "I am followind $peerid" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo "$peerid is my friend" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo "$peerid is in my ring" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo "I am $peerid" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo "ipfs name resolve $peerid" | ipfs add -n --raw-leaves --offline -Q --cid-base base58btc
+echo -n "$USER" | ipfs add -n --raw-leaves --offline -Q --cid-base base58btc
+# -------------------------------------------------------
+echo '420 gone' | ipfs add -Q -
+echo '404 page not found' | ipfs add -Q -
+echo '{"data":"CAO="}' | ipfs dag put --format=protobuf --hash sha3-224 --cid-base base58btc
+echo '{"data":"CAI="}' | ipfs dag put --format=protobuf --hash sha3-224 --cid-base base58btc
+echo '{"data":"CAE="}' | ipfs dag put --format=protobuf --hash sha3-224 --cid-base base58btc
+echo -n 'ipfs' | ipfs add --offline -Q --cid-version 0
+echo -n "ready" | ipfs add -Q  --pin=false -
+echo 'genesis block' | ipfs add --offline -Q --cid-version 0
+echo 'block #0' | ipfs add --offline -Q --cid-version 0
+echo 'blockring™' | ipfs add --offline -Q --cid-version 0
+echo 'mychelium™' | ipfs add --offline -Q --cid-version 0
+echo 'fairtools™' | ipfs add -n --offline -Q --cid-version 0
+echo -n 'qio' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'kio' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'qin' | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'KIN' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'gradual' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'brindex' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'frindex' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+ipfs --version | ipfs add --offline -Q
+# -------------------------------------------------------
+echo "You are welcome" | ipfs add --offline -Q
+echo "I am grateful" | ipfs add --offline -Q
+echo "I am happy" | ipfs add --offline -Q
+echo "We are awakening" | ipfs add --offline -Q
+echo "Are you in ?" | ipfs add --offline -Q
+echo "I am DrIT" | ipfs add --offline -Q
+echo "I am a member of TNet." | ipfs add --offline -Q
+echo "I am certified eco-organic !" | ipfs add --offline -Q
+echo "I am a friend of michelc." | ipfs add --offline -Q
+echo "We are Gilets Jaunes !" | ipfs add --offline -Q
+echo "I run IPMS v0.0" | ipfs add --offline -Q
+echo "I have a qWiki !" | ipfs add --offline -Q
+echo "I am using Pinata !" | ipfs add --offline -Q
+echo "I support the images canonical names initiative." | ipfs add --offline -Q
+echo "I love eco-organic technologies" | ipfs add --offline -Q
+echo "Mychelium BlockRings are just great" | ipfs add --offline -Q
+# -------------------------------------------------------
+echo "I am Happy" | ipfs add --offline -Q
+echo "I am an Engineer" | ipfs add --offline -Q
+echo "I am an Electrical Engineer" | ipfs add --offline -Q
+echo "I am a Software Engineer" | ipfs add --offline -Q
+echo "I am a Healer" | ipfs add --offline -Q
+# -------------------------------------------------------
+echo 'my secret' | ipfs add --offline -Q --cid-base=base58btc
+echo 'password' | ipfs add --offline -Q --cid-base=base58btc
+# -------------------------------------------------------
+echo 'this is the HEAD' | ipfs add --offline -Q --hash sha3-224 --cid-base=base58btc
+echo -n '' | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'noindex' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'index' | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'nofollow' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'follow' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'noimageindx' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'none' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'noarchive' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'nocache' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'nosnippet' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+echo -n 'noydir' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
+# -------------------------------------------------------
+# hashtags
+echo -n '#SFW' | ipfs add -Q --hash sha3-224 --cid-base base58btc
+echo -n '#ASFW' | ipfs add -Q -n
+echo -n '#NSFW' | ipfs add -Q -n
+echo -n '#MYC' | ipfs add -Q --hash sha1 --cid-base base58btc
+# -------------------------------------------------------
+echo -n 'my pinata !' | ipfs add -Q --hash sha3-224 --cid-base base58btc
+echo -n 'my pinata !' | ipfs add -Q -n --hash sha1 --cid-base base58btc
+echo "hello from dockerized ipfs" | ipfs add -Q -n -
+echo "Hello from IPFS Gateway Checker" | ipfs add -Q -n --cid-base base32
+
+echo "Your gateway is ready" | ipfs add -Q -n --hash identity --cid-base base58btc
+echo -n 'server is working' | ipfs add -Q -n --hash identity --cid-base base32hex
+echo -n 'no history !' | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
+echo "local ipfs node is running" | ipfs add --offline -Q
+echo "ipfs is running" | ipfs add --offline -Q
+echo "IPFS is active" | ipfs add --offline -Q
+echo -n "ipfs" | ipfs add -Q -n
+echo "is a robot" | ipfs add -Q --pin=false --hash sha1 --cid-base base58btc
+echo "is alive" | ipfs add -Q --pin=false --hash sha1 --cid-base base58btc
+echo "is an early adopter" | ipfs add -Q --pin=false --hash sha1 --cid-base base58btc
+echo "tofu: $(date +"%D %s")" | ipfs add -Q --pin=false --hash sha1 --cid-base base58btc
+echo -n ipfs | ipfs add -Q
+ipfs add -Q "http://chart.apis.google.com/chart?cht=qr&chs=300x300&chl=hello!"
+#https://www.google.com/search?hl=en&q=%22Provence+Technologies%22+%22Michel+Combes%22
+find $HOME/Desktop/OUTBOX/assets -type f -exec ipfs add -Q {} --raw-leaves  --trickle --chunker size-1048576 --hash sha1 --cid-base base58btc \;
+
+mkdir source; ipfs add -Q -r --hash sha3-224 --cid-base=base58btc source; rmdir source;
+echo -n "info@cadavre.exquis.ml" | ipfs add -Q --hash identity --progress=false --cid-base=base58btc
+echo 'Hello, World!' | ipfs add -Q -n --hash sha3-224
+# key; C8B28CA1A6B4FF2E (public key finger print)
+echo B0998E5007E86F2FABA9E379C8B28CA1A6B4FF2E | xxd -r -p | ipfs add -Q --hash identity --cid-base base58btc
+# key: 8994184834F8D530
+echo 0155 0014 0DB1 3C3D F912 C6A2 0498  8F50 8994 1848 34F8 D530 | xxd -r -p | ipfs add -Q --hash identity --cid-base base58btc
+# assets ...
+# env IPFS_PATH=$HOME/.../ipfs/usb/IMAGES ipfs add --raw-leaves --trickle --chunker size-1048576 -w --hash sha1 --cid-base base58btc *.png *.ico
+ipfs ls z8bviy5BrVCWed1wzrXVzwv76dqXe8XBX | cut -d' ' -f1
+ipfs resolve z8bvj1LhVQ7T55DsTyDddpUcKh1hvwGco | sed -e 's,/ipfs/,,'
+ipfs files stat --hash /ipfs/z8bvj1ag7CSb1hoiZRrjX5crkDaMXjhzS
+ipfs files stat --hash /ipfs/z8bviy5BrVCWed1wzrXVzwv76dqXe8XBX
+ipfs files stat --hash /ipfs/QmXiVvUFQpmncmFqHq1UozwSgr3uCrTkidugPNjE3trkgw
+ipfs files stat --hash /ipfs/Qmc4yrLfmtgF2Nh1cw67yE7vDwSiaJC8dfiRj7RRqyCCnj # git init
+ipfs files stat --hash /ipfs/QmcPPv5qQjhBQtrWkWepYyNqNwEX4Jyhi4dGW7hjKAyeDs # git init --bare
+ipfs files stat --hash /ipfs/QmXKVoU2GEBAfy79sd8gLiDvBo8EBinKGCrtft7tuh9J9A # git --bare update-server-info
+ipfs files stat --hash /ipfs/QmekkpM5xEpbxGnbc9WXszVNwHDQgb2RgV7NismP3eQwMA # git default repository
+ipfs pin add QmcNVy6h9SUqXjFHuPtxj5TZsE6cPEJBD5tYHDt4NV4LTw | cut -d' ' -f2
+ipfs pin add z8bviyWAjVTrTPkdC4JyDPVkLP1PmdNu4 | cut -d' ' -f2
+ipfs pin add z8bviygxkVXgyjc2AKVRSG17g5pp5H3Bu | cut -d' ' -f2
+ipfs pin add z8bvixgLhXJ2e9J5MYLDb5YrjQs7ry3bx | cut -d' ' -f2
+# URLs ...
+ipfs add http://nmcheck.gnome.org/check_network_status.txt
+ipfs add https://bitnodes.io/install-full-node.sh
+# token and code release
+echo -n '' | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
+echo -n 'notoken' |\
+openssl sha256 -r | cut -d' ' -f1 | xxd -r -p | perl -S base36.pl | cut -c 2-14 | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
+echo -n 'uri:no,secret,wwlog:no-secret.txt' |\
+openssl sha256 -r | cut -d' ' -f1 | xxd -r -p | perl -S base36.pl | cut -c 2-14 | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
+echo -n 'uri:we are anonymous,wwlog:anonymous.txt' |\
+openssl sha256 -r | cut -d' ' -f1 | xxd -r -p | perl -S base36.pl | cut -c 2-14 | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
+
+ipfs cat z6CfPsywqu4RwUmJkji3ZGosDubEd5LMZvVxTHXYNd87 | ipfs add -Q -
+echo 'We are Anonymous' | ipfs add -Q --pin=true
+echo 'Pure Love.' | ipfs add -Q --pin=true
+echo -n 'genesis' | ipfs add -Q -n --raw-leaves --hash sha3-224 --cid-base base58btc
+echo -n 'fairTeam' | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
+echo -n '$RELEASE: 0.0.0 - anon' | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
+echo -n 'The publickey QmVHWfUiCDuWGiev4ZYRpFgP4oH7GPiF8vEVoZ6bHCwSd7 is trusted by me' | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
+EOT
+qm=$(ipfs add -Q $hashesf)
+#ipfs files mkdir /my/etc
+ipfs files rm /my/etc/hashes.txt
+ipfs files cp /ipfs/$qm /my/etc/hashes.txt
+
+# multibase see
+#  [1](https://github.com/multiformats/multibase)
+#  [2](https://raw.githubusercontent.com/multiformats/multibase/master/multibase.csv)
+#
+ipfs add https://raw.githubusercontent.com/multiformats/multibase/master/multibase.csv
+
+curl -IL https://gateway.pinata.cloud/ipfs/v05ah8g38clltu41j8dalkejr2sfc3f852e2bd6kdp6vuoh25t92cu68osp8f1dnb072ljc6vu09m4tarogiij84srnpua8p9jv2rkeg0g260m
+curl -IL https://gateway.pinata.cloud/ipfs/z83ajPLpTryujHwGiyowcZ7fvYTzyWSbZ
+#ipfs dht findprovs -n 3 /ipfs/v05ah8g38clltu41j8dalkejr2sfc3f852e2bd6kdp6vuoh25t92cu68osp8f1dnb072ljc6vu09m4tarogiij84srnpua8p9jv2rkeg0g260m
+pinata=$(echo -n 'my pinata !' | ipfs add -Q -n --hash sha3 --cid-base base32hex)
+ipfs dht findprovs -n 3 /ipfs/$pinata
+
+ipfs dht findprovs -n 3 /ipfs/$(echo "IPFS is active" | ipfs add --offline -Q)
