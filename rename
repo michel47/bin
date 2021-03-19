@@ -1,12 +1,14 @@
 #!/usr/bin/perl
 
 my $flat = 0;
+my $simu = 0;
 my $nospace = 1;
 while (@ARGV && $ARGV[0] =~ m/^-/)
 {
   $_ = shift;
   #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
   if (/^-v(?:erbose)?/) { $verbose= 1; }
+  elsif (/^-n/) { $simu= 1; }
   elsif (/^--?no?s(?:pace)?/) { $nospace= 1; }
   elsif (/^--?s(?:pace)?/) { $nospace= 0; }
   elsif (/^--?f(?:lat)?/) { $flat= 1; }
@@ -30,8 +32,14 @@ printf "file: %s\n",$file;
 my $p = rindex($file,'.');
 my $ext = ($p>0) ? substr($file,$p+1) : 'blob';
 my $bname = ($p>0) ? substr($file,0,$p) : $file;
+
    $bname =~ s,^\./,,;
+   $bname =~ s, \(\d+\)$,,;
    $bname =~ s,_+v\d\.\d+-\w+$,,;
+
+my $s = rindex($bname,'/');
+my $rname = ($s>0) ? substr($bname,$s+1) : $bname;
+   $bname =~ s,$rname,f$rname, if ($rname !~ m/^[a-z]/i);
 print "bname: $bname\n";
 #print "ext: $ext\n";
 if ($flat) {
@@ -49,7 +57,9 @@ $name = sprintf '%s_v%.2f-%s.%s',$bname,@ver,$ext;
 printf "name: %s\n",$name;
 printf "cmd: <-\n mv %s %s\n",$file,$name;
 
+if ($simu == 0) {
 rename $file, $name or warn $!;
+}
 
 exit $?;
 

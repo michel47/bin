@@ -18,22 +18,24 @@ while (<>) {
     if ("$f" eq '') {
        s/added/$ptime/;
     } else {
+       my $fr = $f; $fr =~ s/([()])/\\$1/g;
        if (! -e $f && -e "../$f") {
-         s,$f,../$f,;
+         s,$fr,../$f,;
          $f = '../'.$f;
        }
        if (-d $f && $f !~ m,/$,) {
-         s,$f,$f/,;
+         s,$fr,$f/,;
          $f = $f.'/';
        }
        if (-e $f) {
           my ($size,$atime,$mtime,$ctime) = (lstat($f))[7,8,9,10];
           s/added/$mtime/;
-          s,$f,$size $f,;
+          s,$fr,$size $f,;
           $ptime = $mtime;
        } else {
           my $tics = time;
           s/added/$tics/;
+          s,$fr,-1 $f,;
        }
     }
   }
