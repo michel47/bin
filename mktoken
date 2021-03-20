@@ -1,0 +1,61 @@
+#
+
+IPFS_PATH=${IPFS_PATH:-$HOME/.ipfs}
+
+set -e
+echo "--- # ${0##*/}"
+echo "This is a token from Dr I·T's network" | ipfs add --pin=true --cid-version=0 -Q 1>/dev/null
+ditoken=$(echo "This is a token from Dr I·T's network" | ipfs add -n --cid-base=base16 -Q)
+ciqtoken=$(echo $ditoken | cut -c 6- | xxd -r -p | base32 | sed -e 's/==*//');
+#echo ciqtoken: $ciqtoken
+ftoken=$(echo $ciqtoken | tr [:lower:] [:upper:])
+len=$(echo $ftoken | wc -c); p=$(expr $len - 3); q=$(expr $len - 2)
+shard=$(echo $ftoken | cut -c $p-$q)
+tokenf=$IPFS_PATH/blocks/$shard/$ftoken.data
+echo tokenf: $tokenf
+stat -t -c "%i: %s %X,%Y,%Z" $tokenf
+
+if [ "x$1" != 'x' ]; then
+  list="$*"
+else
+# -------------------------------------------
+dikey_label="I have a key from Doctor I·T"
+dipki_label="Doctor I·T's PKI"
+diid_label="I have a Doctor I·T certified identity"
+# -------------------------------------------
+list="$dikey_label\n$dipki_label\n$diid_label"
+fi
+
+echo "$list" | while read label; do
+echo label: $label 
+qm=$(echo "$label" | openssl sha256 -r | xxd -r -p | ipfs add --pin=true -Q)
+echo qm: $qm 
+token=$(ipfs cat /ipfs/$qm | openssl sha256 -r | xxd -r -p | ipfs add --pin=false --cid-base=base16 -Q)
+echo url: http://127.0.0.1:8080/ipfs/$qm
+ciq=$(echo $token | cut -c 6- | xxd -r -p | base32 | sed -e 's/==*//');
+echo url: http://127.0.0.1:8080/ipfs/b$ciq 
+fname=$(echo $ciq | tr [:lower:] [:upper:])
+len=$(echo $fname | wc -c); p=$(expr $len - 3); q=$(expr $len - 2)
+shard=$(echo $fname | cut -c $p-$q)
+repof=$IPFS_PATH/blocks/$shard/$fname.data
+echo shard: $shard
+echo repof: $repof
+echo "original:"
+xxd $repof
+cp -pf $tokenf $repof
+if [ -e $repof ]; then
+ echo "content:"
+ xxd $repof
+fi
+echo -n "botname: "
+perl -S fullname.pl $(ipfs cat b$ciq | base64)
+echo "cmd: |-\n ipfs dht findprovs $qm"
+if ipfs dht findprovs $qm --timeout 2s 2>/dev/null; then true; fi
+echo .
+
+done
+
+
+
+
+
