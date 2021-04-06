@@ -1,0 +1,50 @@
+# 
+
+XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
+cachedir=$XDG_CACHE_HOME/pina
+if [ ! -d $cachedir ]; then
+  mkdir -p $cachedir
+fi
+
+# adding a pin to a qm on pinata
+qm="$1"
+label="$2"
+appid="$(ipfs add -w $0 -Q)/${0##*/}"
+echo "--- # ${0##*/}"
+echo appid: $appid
+
+JWT=$(get_jwt.sh pinata_api_keys)
+echo "JWT: $JWT"
+
+# Dr I·T postman:
+# https://doctor-it.postman.co/home
+# https://app.getpostman.com/join-team?invite_code=d1f98d20aece4fa6a6e232db686610b8
+
+api_url=https://api.pinata.cloud
+#curl -X GET -H "pinata_api_key: $API_Key" -H "pinata_secret_api_key: $API_Secret" $api_url/data/testAuthentication
+#curl -X GET -H "Authorization: Bearer $JWT" $api_url/data/testAuthentication
+
+# pinning service api 
+# spec: https://raw.githubusercontent.com/ipfs/pinning-services-api-spec/master/ipfs-pinning-service.yaml
+# http://127.0.0.1:8080/ipfs/Qma7r25dmVF2nC8eRtbTRjRtZEoHzZ4quKpP1jq6Co8Bes
+
+peerid=$(ipfs config Identity.PeerID)
+echo peerid: $peerid
+origins=$(ipfs swarm addrs local | grep -v -e '127\.0' -e '192\.168' -e '::1' | sed -e "s,$,/p2p/$peerid," -e 's/^/- /' | json_xs -f yaml -t json)
+#echo origins: $origins
+json=$(echo "{'cid':'$qm','name':'$label','origins':$origins,'meta':{'app_id':'$appid'}}" | tr "'" '"')
+#echo json: $json
+
+# see also: https://ipfs.github.io/pinning-services-api-spec/#tag/pins/paths/~1pins/post
+psa_url=https://api.pinata.cloud/psa
+curl -X POST -H "Authorization: Bearer $JWT" $psa_url/pins \
+ -d "$json" -H "Content-Type: application/json" | json_xs | tee $cachedir/pina.log
+delegate=$(cat $cachedir/pina.log | json_xs -t string -e '$_ = $_->{delegates}[0]')
+if [ "x$delegate" != 'x' ]; then
+ipfs swarm connect $delegate
+fi
+
+exit $?
+
+true;
+

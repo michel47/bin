@@ -29,6 +29,11 @@ cat <<EOT | sh /dev/stdin | tee $hashesf
 # history=z6CfPtEY5uJ2QozjweVm2wcwdEHGq263NA1FqCHKY6NZ
 echo "$intent" | ipfs add --offline -Q 
 # -------------------------------------------------------
+echo "This is a token from Dr I·T's network" | ipfs add --pin=true -Q
+echo "I have a key from Doctor I·T" | openssl sha256 -r | xxd -r -p | ipfs add -n --pin=true -Q
+echo "Doctor I·T's PKI" | openssl sha256 -r | xxd -r -p | ipfs add -n --pin=true -Q
+echo "I have a Doctor I·T certified identity" | openssl sha256 -r | xxd -r -p | ipfs add -n --pin=true -Q
+# -------------------------------------------------------
 echo "I had COVID-19" | ipfs add --offline -Q -n
 echo "I upgraded" | ipfs add --offline -Q
 echo "I am $peerid's friend" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
@@ -38,6 +43,10 @@ echo "$peerid is in my ring" | ipfs add --offline -Q --hash sha3-224 --cid-base 
 echo "I am $peerid" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
 echo "ipfs name resolve $peerid" | ipfs add -n --raw-leaves --offline -Q --cid-base base58btc
 echo -n "$USER" | ipfs add -n --raw-leaves --offline -Q --cid-base base58btc
+# -------------------------------------------------------
+echo "DO NOT SELL MY PERSONAL INFORMATION" | ipfs add -Q -
+# -------------------------------------------------------
+echo -n '<!DOCTYPE html>' | ipfs add -Q - --cid-version=0
 # -------------------------------------------------------
 echo '420 gone' | ipfs add -Q -
 echo '404 page not found' | ipfs add -Q -
@@ -59,6 +68,14 @@ echo -n 'gradual' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58bt
 echo -n 'brindex' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
 echo -n 'frindex' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
 ipfs --version | ipfs add --offline -Q
+# -------------------------------------------------------
+echo -n 💜 | ipfs add --offline --pin=true -Q
+echo -n 👍 | ipfs add --offline --pin=true -Q
+echo -n 👎 | ipfs add -n --offline --pin=true -Q
+echo ✍ | ipfs add --offline --pin=true -Q
+echo -n 👀 | ipfs add --offline --pin=true -Q
+echo accepting calls |  ipfs add -n --offline -Q
+echo not accepting calls |  ipfs add -n --offline -Q
 # -------------------------------------------------------
 echo "You are welcome" | ipfs add --offline -Q
 echo "I am grateful" | ipfs add --offline -Q
@@ -110,6 +127,8 @@ echo -n 'my pinata !' | ipfs add -Q -n --hash sha1 --cid-base base58btc
 echo "hello from dockerized ipfs" | ipfs add -Q -n -
 echo "Hello from IPFS Gateway Checker" | ipfs add -Q -n --cid-base base32
 
+echo "We've got (time)stamp" | ipfs add --pin=true
+
 echo "Your gateway is ready" | ipfs add -Q -n --hash identity --cid-base base58btc
 echo -n 'server is working' | ipfs add -Q -n --hash identity --cid-base base32hex
 echo -n 'no history !' | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
@@ -129,6 +148,9 @@ find $HOME/Desktop/OUTBOX/assets -type f -exec ipfs add -Q {} --raw-leaves  --tr
 mkdir source; ipfs add -Q -r --hash sha3-224 --cid-base=base58btc source; rmdir source;
 echo -n "info@cadavre.exquis.ml" | ipfs add -Q --hash identity --progress=false --cid-base=base58btc
 echo 'Hello, World!' | ipfs add -Q -n --hash sha3-224
+echo 'Why, Hello' | ipfs add -Q - --cid-version=0
+ipfs files stat --hash /ipfs/Qmd4AEXjWKgFd76MwDefgk5WkWHbSmTDfYh1ps33LDZXhX # echo -n 'Hello World!!!!!!'
+ipfs files stat --hash /ipfs/QmccRGTWBLyvj57hTHEQ9QLYiyADiTppEQ5Sm5MzgAXXVv # see https://bl.ocks.org/bellbind/6acbeb8fd3aa1f23b75000dbea8efe2e
 # key; C8B28CA1A6B4FF2E (public key finger print)
 echo B0998E5007E86F2FABA9E379C8B28CA1A6B4FF2E | xxd -r -p | ipfs add -Q --hash identity --cid-base base58btc
 # key: 8994184834F8D530
@@ -137,6 +159,7 @@ echo 0155 0014 0DB1 3C3D F912 C6A2 0498  8F50 8994 1848 34F8 D530 | xxd -r -p | 
 # env IPFS_PATH=$HOME/.../ipfs/usb/IMAGES ipfs add --raw-leaves --trickle --chunker size-1048576 -w --hash sha1 --cid-base base58btc *.png *.ico
 ipfs ls z8bviy5BrVCWed1wzrXVzwv76dqXe8XBX | cut -d' ' -f1
 ipfs resolve z8bvj1LhVQ7T55DsTyDddpUcKh1hvwGco | sed -e 's,/ipfs/,,'
+ipfs files stat --hash /ipfs/QmbBuxvtFnjAriF4YctzQsBu254d5CSk65jnDLKcTKo4VK # 📴
 ipfs files stat --hash /ipfs/z8bvj1ag7CSb1hoiZRrjX5crkDaMXjhzS
 ipfs files stat --hash /ipfs/z8bviy5BrVCWed1wzrXVzwv76dqXe8XBX
 ipfs files stat --hash /ipfs/QmXiVvUFQpmncmFqHq1UozwSgr3uCrTkidugPNjE3trkgw
@@ -144,6 +167,7 @@ ipfs files stat --hash /ipfs/Qmc4yrLfmtgF2Nh1cw67yE7vDwSiaJC8dfiRj7RRqyCCnj # gi
 ipfs files stat --hash /ipfs/QmcPPv5qQjhBQtrWkWepYyNqNwEX4Jyhi4dGW7hjKAyeDs # git init --bare
 ipfs files stat --hash /ipfs/QmXKVoU2GEBAfy79sd8gLiDvBo8EBinKGCrtft7tuh9J9A # git --bare update-server-info
 ipfs files stat --hash /ipfs/QmekkpM5xEpbxGnbc9WXszVNwHDQgb2RgV7NismP3eQwMA # git default repository
+ipfs pin add Qma2hJscEDyVCvPx7odLvdGaajMuJdgkvBCPuCcD8Xc3qq | cut -d' ' -f2 # empty git
 ipfs pin add QmcNVy6h9SUqXjFHuPtxj5TZsE6cPEJBD5tYHDt4NV4LTw | cut -d' ' -f2
 ipfs pin add z8bviyWAjVTrTPkdC4JyDPVkLP1PmdNu4 | cut -d' ' -f2
 ipfs pin add z8bviygxkVXgyjc2AKVRSG17g5pp5H3Bu | cut -d' ' -f2

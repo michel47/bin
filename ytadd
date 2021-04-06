@@ -9,7 +9,7 @@ if echo "$1" | grep -q 'https*:/'; then
 fi
 tag="$*"
 export IPFS_PATH=${IPFS_PATH:-$HOME/.../ipfs/*/MEDIA}
-store=${IPFS_PATH}/filestoreA
+store=${IPFS_PATH}/filestore
 if [ ! -d $store ]; then exit $(expr $$ % 251); fi
 cd $store
 

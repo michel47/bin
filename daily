@@ -24,6 +24,33 @@ case "$op" in
  *) duc index -d $cachedir/IPFS.db $HOME/.../ipfs/{usb,repo,hdd,DEDUP,};;
 esac
 
+# autogit !
+date=$(date +%D);
+time=$(date +%T);
+
+cd $HOME/bin
+gitid=$(git rev-parse --short HEAD)
+branch=$(git rev-parse --abbrev-ref HEAD)
+tic=$(date +%s)
+ver=$(perl -S version -a $0 | json_xs -f yaml -t string -e '$_ = $_->{scheduled}' )
+echo ver: $ver
+qm=$(ipfs --offline add -Q -r -n . )
+eval $(perl -S fullname.pl -a $qm | eyml)
+export GIT_COMMITTER_NAME="$fullname"
+export GIT_COMMITTER_EMAIL="$email"
+
+msg="$ver $time: daily commit on $date ~ $firstname $lni."
+if git commit -a -m "$msg"; then
+gitid=$(git rev-parse HEAD)
+git tag -f -a $ver -m "tagging $gitid on $date"
+#echo gitid: ${gitid:0:9} # this is bash!
+echo gitid: $gitid | cut -b 1-14
+if test -e revs.log; then
+echo $tic: $gitid >> revs.log
+fi
+
+
+
 
 # next time
 cd $pwd

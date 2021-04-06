@@ -2,19 +2,25 @@
 
 # indent: check size of disks and create duc charts ...
 
+echo "--- # ${0##*/}"
 ls -l $HOME/Pictures/*.svg
 
 if [ -d "$1" ]; then
   if ! echo "$1" | grep -q '^/'; then
     d="$(pwd -P)/$1"
-    d=$(relink -f "$d")
+    d=$(readlink -f "$d")
   else 
-    d=$(relink -f "$1")
+    d=$(readlink -f "$1")
   fi
+  echo "d: $d"
   list="$d"
+else
+ds="/media/$USER/4TB/images:/data:/media/$USER/4TB/IPFS:/media/$USER/4TB/repos:/home"
+n=$(expr "$(date +%s)" % 4 + 1)
+echo n: $n
+list="$(echo $ds | cut -d':' -f$n)"
 fi
-list="/media/$USER/4TB/images /data /media/$USER/4TB/IPFS /media/$USER/4TB/repos /home"
-
+echo list: $list
 
 for ddir in $list; do
 name=${ddir##*/}
