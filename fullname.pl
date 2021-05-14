@@ -9,9 +9,10 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
 {
   $_ = shift;
   #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
-  if (/^-v(?:erbose)?/) { $verbose= 1; }
-  elsif (/^-a(?:ll)?/) { $all= 1; }
-  elsif (/^-y(?:ml)?/) { $yml= 1; }
+  if (/^--?v(?:erbose)?/) { $verbose= 1; }
+  elsif (/^--?d(?:e?bug)?/) { $all= 1; }
+  elsif (/^--?a(?:ll)?/) { $all= 1; }
+  elsif (/^--?y(?:ml)?/) { $yml= 1; }
   else                  { die "Unrecognized switch: $_\n"; }
 
 }

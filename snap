@@ -1,0 +1,55 @@
+#
+
+
+ping -c 1 sunrise.com
+
+if echo -n "\e" | grep -q -e 'e'; then
+ e="-e" # bash needs a -e !
+fi
+# colors : [see also](https://en.wikipedia.org/wiki/ANSI_escape_code)
+default=$(echo -n $e "\e[39m")
+red=$(echo -n $e "\e[31m")
+green=$(echo -n $e "\e[1;32m")
+yellow=$(echo -n $e "\e[1;33m")
+cyan=$(echo -n $e "\e[2;36m")
+grey=$(echo -n $e "\e[0;90m")
+nc=$(echo -n $e "\e[0m")
+
+prev=$(ipfs add -w $HOME/.cache/logs/snap.log $0 -Q)
+echo "prev: $prev" >> $HOME/.cache/logs/snap.log
+
+# savestdout and stderr
+exec 3>&1 4>&2
+exec >> $HOME/.cache/logs/snap.log
+exec 2>&1
+#tee -a $HOME/foo <&1 ???
+
+echo ${cyan}$(date)${nc}
+echo spot:
+spot
+
+echo nslookup sunrise.com:
+nslookup sunrise.com
+echo "ping: ${green}74.208.236.102 (sunrise):${nc}"
+time ping -c 5 74.208.236.102
+echo dig ${yellow}google.com${nc}
+dig google.com
+echo ping: ${yellow}google.com${nc}
+time ping -c 3 8.8.8.8
+time ping -c 3 216.58.215.238
+echo ping: ${yellow}netlify:${nc}
+time ping -c 3 104.198.14.52
+echo ping: ${yellow}cloudflare:${nc}
+time ping -c 3 cloudflare-ipfs.com
+
+echo .
+
+# restore stdout and stderr
+exec 1>&3 2>&4 3>&- 4>&-
+grep -e rtt -e loss -e 'ping:' $HOME/.cache/logs/snap.log | grep -v ' 0%' | tail
+qm=$(ipfs add -w $HOME/.cache/logs/snap.log $0 -Q)
+tic=$(date +%s)
+echo "$tic: $qm" >> $HOME/.cache/logs/snap.log
+echo url: http://127.0.0.1:8390/ipfs/$qm
+
+exit $?

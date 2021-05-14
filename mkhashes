@@ -55,6 +55,8 @@ echo '{"data":"CAI="}' | ipfs dag put --format=protobuf --hash sha3-224 --cid-ba
 echo '{"data":"CAE="}' | ipfs dag put --format=protobuf --hash sha3-224 --cid-base base58btc
 echo -n 'ipfs' | ipfs add --offline -Q --cid-version 0
 echo -n "ready" | ipfs add -Q  --pin=false -
+echo -n "{}" | ipfs add -Q  --pin=false - # empty json map
+echo -n "[]" | ipfs add -Q  --pin=false - # empty json array
 echo 'genesis block' | ipfs add --offline -Q --cid-version 0
 echo 'block #0' | ipfs add --offline -Q --cid-version 0
 echo 'blockring™' | ipfs add --offline -Q --cid-version 0
@@ -68,6 +70,13 @@ echo -n 'gradual' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58bt
 echo -n 'brindex' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
 echo -n 'frindex' | ipfs add -n --offline -Q --hash sha3-224 --cid-base base58btc
 ipfs --version | ipfs add --offline -Q
+# -------------------------------------------------------
+echo -n "I’m important. Don’t delete me!" | ipfs add -Q - --cid-version=0
+echo -n "I have NFTs on IPFS." | ipfs add -Q - --cid-version=0
+echo -n "I have ETH." | ipfs add -Q - --cid-version=0
+echo -n "I have cryptocurrencies." | ipfs add -Q - --cid-version=0
+echo -n "I have NFTs." | ipfs add -Q - --cid-version=0
+echo -n "I am a crypto artist." | ipfs add -Q - --cid-version=0
 # -------------------------------------------------------
 echo -n 💜 | ipfs add --offline --pin=true -Q
 echo -n 👍 | ipfs add --offline --pin=true -Q

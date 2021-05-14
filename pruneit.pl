@@ -3,6 +3,7 @@
 # usage: 
 #  perl pruneit.pl 50G cold.log dustdir
 
+$| = 1;
 use YAML::XS qw(Dump);
 
 #--------------------------------
