@@ -36,6 +36,7 @@ my $bname = ($p>0) ? substr($file,0,$p) : $file;
    $bname =~ s,^\./,,;
    $bname =~ s,_+v\d\.\d+-\w+$,,;
    $bname =~ s,\(\d+\)$,,;
+   $bname =~ s,[\-_]$,,;
 
 my $s = rindex($bname,'/');
 my $rname = ($s>0) ? substr($bname,$s+1) : $bname;

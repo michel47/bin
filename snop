@@ -1,6 +1,7 @@
 #
 
-
+# snop spot-notification-protocol
+echo "--- # ${0##*/}"
 ping -c 1 sunrise.com
 
 if echo -n "\e" | grep -q -e 'e'; then
@@ -15,12 +16,12 @@ cyan=$(echo -n $e "\e[2;36m")
 grey=$(echo -n $e "\e[0;90m")
 nc=$(echo -n $e "\e[0m")
 
-prev=$(ipfs add -w $HOME/.cache/logs/snap.log $0 -Q)
-echo "prev: $prev" >> $HOME/.cache/logs/snap.log
+prev=$(ipfs add -w $HOME/.cache/logs/snop.log $0 -Q)
+echo "prev: $prev" >> $HOME/.cache/logs/snop.log
 
 # savestdout and stderr
 exec 3>&1 4>&2
-exec >> $HOME/.cache/logs/snap.log
+exec >> $HOME/.cache/logs/snop.log
 exec 2>&1
 #tee -a $HOME/foo <&1 ???
 
@@ -46,10 +47,10 @@ echo .
 
 # restore stdout and stderr
 exec 1>&3 2>&4 3>&- 4>&-
-grep -e rtt -e loss -e 'ping:' $HOME/.cache/logs/snap.log | grep -v ' 0%' | tail
-qm=$(ipfs add -w $HOME/.cache/logs/snap.log $0 -Q)
+grep -e rtt -e loss -e 'ping:' $HOME/.cache/logs/snop.log | grep -v ' 0%' | tail
+qm=$(ipfs add -w $HOME/.cache/logs/snop.log $0 -Q)
 tic=$(date +%s)
-echo "$tic: $qm" >> $HOME/.cache/logs/snap.log
+echo "$tic: $qm" >> $HOME/.cache/logs/snop.log
 echo url: http://127.0.0.1:8390/ipfs/$qm
 
 exit $?

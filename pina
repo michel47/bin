@@ -14,7 +14,7 @@ echo "--- # ${0##*/}"
 echo appid: $appid
 
 JWT=$(get_jwt.sh pinata_api_keys)
-echo "JWT: $JWT"
+#echo "JWT: $JWT"
 
 # Dr I·T postman:
 # https://doctor-it.postman.co/home
