@@ -2,7 +2,11 @@
 
 # snop spot-notification-protocol
 echo "--- # ${0##*/}"
-ping -c 1 sunrise.com
+time dig github.com | grep -v -e '^;' -e '^$'
+
+#dig sunrise.com | grep -v -e '^;' -e '^$'
+ping -D -A -c 3 74.208.236.102
+if [ -e $HOME/.tty ]; then ttyp=$(cat $HOME/.tty); else ttyp=/dev/tty; fi
 
 if echo -n "\e" | grep -q -e 'e'; then
  e="-e" # bash needs a -e !
@@ -30,19 +34,23 @@ echo spot:
 spot
 
 echo nslookup sunrise.com:
-nslookup sunrise.com
+time nslookup sunrise.com
 echo "ping: ${green}74.208.236.102 (sunrise):${nc}"
-time ping -c 5 74.208.236.102
+time ping -D -A -c 5 74.208.236.102
 echo dig ${yellow}google.com${nc}
 dig google.com
 echo ping: ${yellow}google.com${nc}
-time ping -c 3 8.8.8.8
-time ping -c 3 216.58.215.238
+time ping -D -A -c 3 8.8.8.8
+time ping -D -A -c 3 216.58.215.238
 echo ping: ${yellow}netlify:${nc}
-time ping -c 3 104.198.14.52
+time ping -D -A -c 3 104.198.14.52
 echo ping: ${yellow}cloudflare:${nc}
-time ping -c 3 cloudflare-ipfs.com
+#time ping -D -A -c 3 cloudflare-ipfs.com
+time ping -D -A -c 3 104.17.64.14
+echo ping: ${yellow}github:${nc}
+time ping -D -A -c 3 140.82.121.3
 
+speedtest -f csv -s 28045
 echo .
 
 # restore stdout and stderr

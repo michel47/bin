@@ -220,17 +220,17 @@ while (1) {
            $cidv = 0;
            $cid = pack'H*','0170';
            $type = 'CIQ';
-           $key = substr($mh32u,3,2)
+           $key = substr($mh32u,3,3)
          } elsif ($mh32u =~ m/^(AF[KY](?:REI|BCF))/) {
            $cidv = 1;
            $cid = $magic2;
            $type = $1;
-           $key = substr($mh32u,6,2);
+           $key = substr($mh32u,6,3);
          #} elsif ($mh32u =~ m/^(AF[KY](?:AA))/) {
          } else {
            $cid = pack'H*','0155' unless $cid;
            $type = substr($mh32u,0,3);
-           $key = substr($mh32u,3,3);
+           $key = substr($mh32u,-4,3);
          }
          print "cmd: |-\n";
          printf "   locate -A %s/%s %s .data\n", substr(uc$mh32,-3,2),$type,$key;
