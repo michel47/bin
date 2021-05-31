@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+
+# raise a listed windows
+
+# colors : [see also](https://en.wikipedia.org/wiki/ANSI_escape_code)
+my $default = '[39m';
+my $red = '[31m';
+my $green = '[1;32m';
+my $dcyan = '[2;36m';
+my $grey = '[0;90m';
+my $nocolor = '[0m';
+my ($v,$c,$i,$nc,$dc) = ($green,$dcyan,$grey,$nocolor,$default);
+my $r = $red;
+
+my $pat = shift;
+   $pat =~ s/^(.)/[\1]/;
+printf "\033]0;xw: raise a listed window /%s/ - wmctrl -p -l\007",$pat;
+
+printf "wmctrl -a %s\n",$pat;
+my $out = `wmctrl -p -l`;
+open *WM,'>>',$ENV{HOME}.'/mutables/xw.log';
+printf WM $out;
+close WM;
+my @windows = split/\n/,$out;
+
+#printf "%s\n",join"\n ",@windows; exit;
+
+my @WID = ();
+my $n = 0;
+foreach (0 .. $#windows) {
+  my $line = $windows[$_];
+  #print "$line\n";
+  my ($wid,undef,$pid,undef,$name) = split(/\s+/,$line,5);
+  if ($line =~ m/$pat/) {
+     #$line =~ s/\s/./g; printf "%s\n",$line;
+     $name =~ s/(${pat})/${red}\1${dc}/;
+     printf "${g}%02d${nc}|${v}%s${nc}.\n",$_,$name;
+     $n++;
+  }
+  push @WIDs,$wid;
+   
+}
+
+exit unless $n;
+
+while (1) {
+
+  print "n? "; my $ans = <STDIN>; chomp($ans);
+  exit if ($ans eq 'q');
+
+  my $num = $ans;
+  if ($num =~ m/^[0-9]+$/) {
+     printf "(%s)\n",$windows[$num];
+     system sprintf"wmctrl -i -a %s",$WIDs[$num];
+     last if $pat;
+  } else {
+     my $pat = $ans; 
+     printf "\033]0;wmctrl -a %s\007",$pat;
+     @WIDs = ();
+     foreach (0 .. $#windows) {
+        my $line = $windows[$_];
+        my ($wid,undef,$pid,undef,$name) = split(/\s+/,$line,5);
+        if ($line =~ m/$pat/) {
+           $name =~ s/(${pat})/${red}\1${dc}/;
+           printf "${g}%02d${nc}|${v}%s${nc}.\n",$_,$name;
+        }
+        push @WIDs,$wid;
+     }
+  }
+ 
+
+}
+
+
+exit $?;
+
+1;
+

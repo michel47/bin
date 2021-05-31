@@ -11,19 +11,23 @@ echo "my internet is down" | $ipfs add --raw-leaves -pin=true --progress=false -
 $ipfs dht provide zb2rhaAgAM19HByZSiSENFsG5Bz9bAScvXZmobJ5XnJieoshc &
 #exit;
 
-ping -D -A -W 3 -c 23 sunrise.com >> $cachedir/sunping.log || s=0
+ping -D -A -W 3 -c 29 74.208.236.102 >> $cachedir/sunping.log || s=0
 echo -n "$tic: status=$?" >> $cachedir/sunstatus.log
-ping -D -A -W 3 -c 19 www.linkedin.com || s=0
+ping -D -A -W 3 -c 23 sunrise.com >> $cachedir/sunping.log || s=0
 echo -n " $?" >> $cachedir/sunstatus.log
-ping -D -A -W 3 -c 17 gist.github.com || s=0
+ping -D -A -W 3 -c 19 4.2.2.1 || s=0
 echo -n " $?" >> $cachedir/sunstatus.log
-ping -D -A -W 3 -c 13 google.com || s=0
+ping -D -A -W 3 -c 17 www.linkedin.com || s=0
 echo -n " $?" >> $cachedir/sunstatus.log
-ping -D -A -W 3 -c 11 gateway.ipfs.io || s=0
+ping -D -A -W 3 -c 13 gist.github.com || s=0
 echo -n " $?" >> $cachedir/sunstatus.log
-ping -D -A -W 3 -c 7 opentimestamps.org || s=0
+ping -D -A -W 3 -c 11 google.com || s=0
 echo -n " $?" >> $cachedir/sunstatus.log
-ping -D -A -W 3 -c 5 opensea.io && s=1
+ping -D -A -W 3 -c 7 gateway.ipfs.io || s=0
+echo -n " $?" >> $cachedir/sunstatus.log
+ping -D -A -W 3 -c 5 opentimestamps.org || s=0
+echo -n " $?" >> $cachedir/sunstatus.log
+ping -D -A -W 3 -c 3 opensea.io && s=1
 echo  " $?." >> $cachedir/sunstatus.log
 p=$(cat $cachedir/sunstatus.txt)
 echo $s > $cachedir/sunstatus.txt
