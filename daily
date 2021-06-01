@@ -49,6 +49,8 @@ if test -e revs.log; then
 echo $tic: $gitid >> revs.log
 fi
 
+fi
+
 
 
 
