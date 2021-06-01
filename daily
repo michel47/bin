@@ -11,7 +11,7 @@ ipfs add $0 $HOME/etc/crontab-l.txt | perl -S stamped.pl >> $HOME/etc/stamped.lo
 #cd $HOME/repo/github.com/covid19
 #sh ./daily.sh > daily.log 2>&1
 
-op=$(expr $day % 4);
+if op=$(expr $day % 4); then true; fi
 echo op: $op
 
 cd $HOME/.../ipfs
