@@ -56,9 +56,10 @@ fi
 
 # next time
 cd $pwd
-#t=$(perl -S random.pl -a 2 | json_xs -f yaml -t string -e '$_ = $_->{rand}')
-t=$(perl -S random.pl 2)
-m=$(echo "(( 22 + $t ) * 60)/1" | bc) &&echo $m
+t=$(perl -S random.pl -a 2 | json_xs -f yaml -t string -e '$_ = $_->{rand}')
+#t=$(perl -S random.pl 2)
+m=$(echo "(( 22 + $t ) * 60)/1" | bc)
+echo m: $m
 at -f $0 now + $m minutes
 
 
