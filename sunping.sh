@@ -44,9 +44,8 @@ ping -c 1 na-west1.surge.sh 1>/dev/null
 ping -c 1 michelc.netlify.com 1>/dev/null
 ping -c 1 freepikcompany.com 1>/dev/null
 # echo "Your Internet is DOWN" | $ipfs add
-env DISPLAY=:0 firefox http://localhost:8390/ipfs/Qmaq9GJrmJdMPxo9ThC8NRk6zjQkPUyZKcNC1uYhBHDPVb
-
-#env DISPLAY=:0 firefox http://localhost:8390/ipfs/zb2rhaAgAM19HByZSiSENFsG5Bz9bAScvXZmobJ5XnJieoshc
+#env DISPLAY=:0 firefox --new-tab http://localhost:8390/ipfs/Qmaq9GJrmJdMPxo9ThC8NRk6zjQkPUyZKcNC1uYhBHDPVb
+system('espeak "internet is downr"');
 fi
 if [ "$s" = '1' -a "$p" = '0' ]; then
 $ipfs dht findprovs -n 1 zb2rhaAgAM19HByZSiSENFsG5Bz9bAScvXZmobJ5XnJieoshc
@@ -54,8 +53,9 @@ echo "My internet is UP!" > /home/michelc/.ipfs/blocks/ED/AFKREIBULR2LB6AUY75KCV
 curl -4 https://icanhazip.com
 echo "Your internet connection is back UP" | $ipfs add
 #env DISPLAY=:0 firefox http://gateway.ipfs.io/ipfs/QmbbMRJJyuNdPniaCmgqFiNR5CBm17Kd8AMsC1SFzUwTVr
-env DISPLAY=:0 firefox http://localhost:8390/ipfs/zb2rhaAgAM19HByZSiSENFsG5Bz9bAScvXZmobJ5XnJieoshc
+#env DISPLAY=:0 firefox http://localhost:8390/ipfs/zb2rhaAgAM19HByZSiSENFsG5Bz9bAScvXZmobJ5XnJieoshc
 #env DISPLAY=:0 firefox https://ipfs.blockringtm.ml/ipfs/zb2rhaAgAM19HByZSiSENFsG5Bz9bAScvXZmobJ5XnJieoshc
+system('espeak "internet is downr"');
 fi
 
 exit $?

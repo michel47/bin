@@ -18,10 +18,15 @@ cd $HOME/.../ipfs
 cachedir=$HOME/.cache/duc
 
 case "$op" in
- 0) echo duc index -d $cachedir/4TB.db -x /media/michelc/4TB;;
- 1) duc index -d $cachedir/data.db -x /data;;
- 2) duc index -d $cachedir/root.db -x /;;
- *) duc index -d $cachedir/IPFS.db $HOME/.../ipfs/{usb,repo,hdd,DEDUP,};;
+ 0) echo duc index -d $cachedir/4TB.db -x /media/michelc/4TB;
+    duc graph -d $cachedir/4TB.db -f svg -o $HOME/Pictures/4TB.svg /media/michelc/4TB;;
+ 1) duc index -d $cachedir/data.db -x /data;
+    duc graph -d $cachedir/data.db -f svg -o $HOME/Pictures/data.svg /data;;
+ 2) duc index -d $cachedir/root.db -x /;
+    duc graph -d $cachedir/root.db -f svg -o $HOME/Pictures/root.svg /;;
+ *) duc index -d $cachedir/IPFS.db $HOME/.../ipfs/{usb,repo,hdd,DEDUP};
+    duc graph -d $cachedir/IPFS.db -f svg -o $HOME/Pictures/IPFS.svg $HOME/.../ipfs
+
 esac
 
 # autogit !
