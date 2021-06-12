@@ -2,7 +2,7 @@
 
 # snop spot-notification-protocol
 echo "--- # ${0##*/}"
-time dig github.com | grep -v -e '^;' -e '^$'
+time dig +short github.com | grep -v -e '^;' -e '^$'
 
 #dig sunrise.com | grep -v -e '^;' -e '^$'
 ping -D -A -c 3 74.208.236.102
@@ -38,7 +38,7 @@ time nslookup sunrise.com
 echo "ping: ${green}74.208.236.102 (sunrise):${nc}"
 time ping -D -A -c 5 74.208.236.102
 echo dig ${yellow}google.com${nc}
-dig google.com
+dig +short google.com
 echo ping: ${yellow}google.com${nc}
 time ping -D -A -c 3 8.8.8.8
 time ping -D -A -c 3 216.58.215.238

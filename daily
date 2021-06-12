@@ -1,8 +1,11 @@
 #
 
+# vim: syntax=sh
 tic=$(date +%s)
 day=$(date +%j)
 
+export PATH=$PATH:$HOME/.../ipfs/bin
+# -----------------------------------------------------------------------------
 pwd=$PWD;
 
 crontab -l > $HOME/etc/crontab-l.txt
@@ -11,6 +14,7 @@ ipfs add $0 $HOME/etc/crontab-l.txt | perl -S stamped.pl >> $HOME/etc/stamped.lo
 #cd $HOME/repo/github.com/covid19
 #sh ./daily.sh > daily.log 2>&1
 
+# -----------------------------------------------------------------------------
 if op=$(expr $day % 4); then true; fi
 echo op: $op
 
@@ -28,7 +32,7 @@ case "$op" in
     duc graph -d $cachedir/IPFS.db -f svg -o $HOME/Pictures/IPFS.svg $HOME/.../ipfs
 
 esac
-
+# -----------------------------------------------------------------------------
 # autogit !
 date=$(date +%D);
 time=$(date +%T);
@@ -55,17 +59,19 @@ echo $tic: $gitid >> revs.log
 fi
 
 fi
-
-
-
-
-# next time
 cd $pwd
+# -----------------------------------------------------------------------------
+cd $HOME/.../mutables/state
+sh collectqm.sh
+sh publish.sh
+cd $pwd
+# -----------------------------------------------------------------------------
+# next time
 t=$(perl -S random.pl -a 2 | json_xs -f yaml -t string -e '$_ = $_->{rand}')
 #t=$(perl -S random.pl 2)
 m=$(echo "(( 22 + $t ) * 60)/1" | bc)
 echo m: $m
 at -f $0 now + $m minutes
-
+# -----------------------------------------------------------------------------
 
 true; # $Source: /my/shell/scripts/daily.sh $

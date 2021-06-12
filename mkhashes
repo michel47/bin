@@ -34,6 +34,7 @@ echo "I have a key from Doctor I·T" | openssl sha256 -r | xxd -r -p | ipfs add 
 echo "Doctor I·T's PKI" | openssl sha256 -r | xxd -r -p | ipfs add -n --pin=true -Q
 echo "I have a Doctor I·T certified identity" | openssl sha256 -r | xxd -r -p | ipfs add -n --pin=true -Q
 # -------------------------------------------------------
+echo "SARS-nCov-2: I had acquired immunity via recovery" | ipfs add --offline -Q
 echo "I had COVID-19" | ipfs add --offline -Q -n
 echo "I upgraded" | ipfs add --offline -Q
 echo "I am $peerid's friend" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
@@ -43,6 +44,7 @@ echo "$peerid is in my ring" | ipfs add --offline -Q --hash sha3-224 --cid-base 
 echo "I am $peerid" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
 echo "ipfs name resolve $peerid" | ipfs add -n --raw-leaves --offline -Q --cid-base base58btc
 echo -n "$USER" | ipfs add -n --raw-leaves --offline -Q --cid-base base58btc
+echo "I have an IRQLine for PR" | ipfs add --offline -Q --hash sha3-224 --cid-base base58btc
 # -------------------------------------------------------
 echo "DO NOT SELL MY PERSONAL INFORMATION" | ipfs add -Q -
 # -------------------------------------------------------
