@@ -1,0 +1,77 @@
+#
+
+# vim: syntax=sh
+tic=$(date +%s)
+day=$(date +%j)
+
+export PATH=$PATH:$HOME/.../ipfs/bin
+# -----------------------------------------------------------------------------
+pwd=$PWD;
+
+crontab -l > $HOME/etc/crontab-l.txt
+ipfs add $0 $HOME/etc/crontab-l.txt | perl -S stamped.pl >> $HOME/etc/stamped.log
+
+#cd $HOME/repo/github.com/covid19
+#sh ./daily.sh > daily.log 2>&1
+
+# -----------------------------------------------------------------------------
+if op=$(expr $day % 4); then true; fi
+echo op: $op
+
+cd $HOME/.../ipfs
+cachedir=$HOME/.cache/duc
+
+case "$op" in
+ 0) echo duc index -d $cachedir/4TB.db -x /media/michelc/4TB;
+    duc graph -d $cachedir/4TB.db -f svg -o $HOME/Pictures/4TB.svg /media/michelc/4TB;;
+ 1) duc index -d $cachedir/data.db -x /data;
+    duc graph -d $cachedir/data.db -f svg -o $HOME/Pictures/data.svg /data;;
+ 2) duc index -d $cachedir/root.db -x /;
+    duc graph -d $cachedir/root.db -f svg -o $HOME/Pictures/root.svg /;;
+ *) duc index -d $cachedir/IPFS.db $HOME/.../ipfs/{usb,repo,hdd,DEDUP};
+    duc graph -d $cachedir/IPFS.db -f svg -o $HOME/Pictures/IPFS.svg $HOME/.../ipfs
+
+esac
+# -----------------------------------------------------------------------------
+# autogit !
+date=$(date +%D);
+time=$(date +%T);
+
+cd $HOME/bin
+gitid=$(git rev-parse --short HEAD)
+branch=$(git rev-parse --abbrev-ref HEAD)
+tic=$(date +%s)
+ver=$(perl -S version -a $0 | json_xs -f yaml -t string -e '$_ = $_->{scheduled}' )
+echo ver: $ver
+qm=$(ipfs --offline add -Q -r -n . )
+eval $(perl -S fullname.pl -a $qm | eyml)
+export GIT_COMMITTER_NAME="$fullname"
+export GIT_COMMITTER_EMAIL="$email"
+
+msg="$ver $time: daily commit on $date ~ $firstname $lni."
+if git commit -a -m "$msg"; then
+gitid=$(git rev-parse HEAD)
+git tag -f -a $ver -m "tagging $gitid on $date"
+#echo gitid: ${gitid:0:9} # this is bash!
+echo gitid: $gitid | cut -b 1-14
+if test -e revs.log; then
+echo $tic: $gitid >> revs.log
+fi
+
+fi
+cd $pwd
+# -----------------------------------------------------------------------------
+cd $HOME/.../mutables/state
+sh collectqm.sh
+sh publish.sh
+cd $pwd
+# -----------------------------------------------------------------------------
+# next time
+t=$(perl -S random.pl -a 2 | json_xs -f yaml -t string -e '$_ = $_->{rand}')
+#t=$(perl -S random.pl 2)
+m=$(echo "(( 22 + $t ) * 60)/1" | bc)
+echo m: $m
+at -f $0 now + $m minutes
+# -----------------------------------------------------------------------------
+
+true; # $Source: /my/shell/scripts/daily.sh $

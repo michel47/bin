@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+BEGIN {my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,0,$p):'.'}#for SITE.pm
+
+use lib $bindir;
+use SITE qw();
+use UTIL qw(hashr encode_base64m encode_base32 encode_base58 varint);
+
+my $n = 1;
+my $l = 24;
+my $a = 'MD5';
+my $hcode = { # multihash codes
+ 'MD5' => pack('H*','d5'),
+ 'SHA1' => "\x11",
+ 'SHA256' => "\x12",
+};
+
+local $/ = "\n";
+while (<>) {
+   my $line = $_;
+   chomp $line;
+   my $buf = $line;
+   if ($buf =~ m/\w+=.+/) {
+     eval "\$$buf;";
+     next;
+   }
+   my $code=int rand(99999);
+   #print "code: $code\n";
+   $buf =~ s/\\\\/{%5C:$code}/g;
+   $buf =~ s/\\n/\n/g;
+   $buf =~ s/{%5C:$code}/\\\\/g;
+   my $hash = &hashr($a,$n,$buf); # hash it n times ...
+   my $pad = "\x00"x$l;
+   my $subhash = substr($hash.$pad,0,$l); # truncate it
+   printf "// algo: (%s^%d)-%d-%d (%dB)\n",$a,$n,length($hash)*8,length(substr($hash,0,$l))*8,$l;
+   printf "h16: %s\n",unpack'H*',$subhash;
+   printf "h64: %s\n",&encode_base64m($subhash);
+   my $mhdr = $hcode->{$a}.&varint($l);
+   my $mhash = $mhdr . $subhash;
+   printf "mh16: f%s\n",unpack'H*',$mhash;
+   printf "mh32: b%s\n",&encode_base32("\x01\55".$mhash);
+   printf "mh58: z%s\n",&encode_base58("\x01\x55".$mhash);
+  
+   last if ($line eq 'exit');
+}
+

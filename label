@@ -1,0 +1,38 @@
+#
+
+
+# usage:
+#  label QmHash name
+#
+# a set : qmhash ↦ label
+# a map : name/tag ⟼   qmhash
+
+core=$(core "$0")
+cachedir=$HOME/.cache/${core}Tools
+if [ ! -d $cachedir ]; then
+mkdir $cachedir
+fi
+
+echo "--- # $0"
+pgm="${0##*/}"
+tic=$(date +%s)
+
+hash="${1##*/ipfs/}"
+name="$2"
+
+emptyd=$(ipfs object new -- unixfs-dir)
+
+qm=$(ipfs object patch add-link $emptyd "$name" $hash)
+k36=$(ipfs cid format -f="%m" -b=base36 $qm)
+echo qm: $qm
+echo k36: $k36
+echo url: http://127.0.0.1:8080/ipfs/$qm
+echo "url: http://$k36.ipfs.dweb.link/$name"
+
+echo $tic: $name $qm >> $cachedir/$pgm-map.log
+ipfs add $cachedir/$pgm-map.log
+echo files: $cachedir/$pgm-map.log
+
+exit $?
+
+true; # $Source: /my/shell/scripts/label.sh $

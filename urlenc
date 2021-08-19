@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+# This program has one dependencies :
+# - SITE.pm
+# called in line 10
+BEGIN { my$p=rindex($0,'/');our$bindir=($p>0)?substr($0,0,$p):'.'; } # for SITE.pm
+
+
+use lib $bindir;
+use SITE qw();
+use UTIL qw(urlenc);
+
+while (<>) {
+  chomp;
+  printf "%s\n",&urlenc($_);
+  last if m/^q$/
+}

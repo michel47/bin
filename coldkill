@@ -1,0 +1,31 @@
+#
+set -e
+for pid in $*; do true; done;
+if echo "$pid" | grep "[0-9][0-9]*$"; then
+  echo -n "${0##*/} "
+  kill -18 $pid
+  for s in 1 17 3 6 10 12 13 11 15 30 14 8 7 6 5 4 3 2 1 9 ; do
+    echo -n "-$s "
+    sleep 1;
+    kill -$s $*
+  done
+else
+ #regx=$(echo "$*" | sed -e 's/\(.\)/\[\1]/')
+ regx=$(echo "$pid" | sed -e 's/./\[&]/')
+ echo "pgrep $regx"
+ ps -aux | grep $regx --color | sed -e 's/[\t ][\t ]*/ /' | cat -n
+ pids=$(ps -aux | grep $regx --color | sed -e 's/[\t ][\t ]*/ /' | cut -d' ' -f2)
+ echo pids: $pid
+ echo -n " which one ? "
+ read ans
+ #set -x
+ if echo "$ans" | grep -q '^[0-9]'; then
+   pid=$(echo $pids | cut -d' ' -f$ans)
+   ${0##*/} $pid
+ else 
+   pid="$pids"
+   echo ${0##*/} $pid
+ fi
+fi
+exit $?
+true

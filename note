@@ -1,0 +1,108 @@
+#
+
+# This script is to with a note on the immuable web !
+# the file is stored at /my/note.txt
+# and /root/mutables/note/note.txt
+#
+# prerequisites :
+# - ipfs node running
+# - ~/bin/version
+# - ~/bin/xyml
+# - ~/mutables/note.httt
+#
+# file the deps...
+deps=$(ipfs add -w $0 $(which version) $(which xyml) $HOME/mutables/note.httt)
+# found at http://127.0.0.1:8080/ipfs/{{deps}}
+
+
+
+# vim: nospell
+LC_TIME=en_US.UTF-8
+
+notef=note-$$.txt
+cat <<EOF > $notef;
+\`\`\`
+Date: $(date)
+Note: $notef
+Subject: /my/note.txt
+\`\`\`
+Previous: [/root/mutables/][mt][note.txt][qm]
+---
+EOF
+EDITOR="gvim -g --servername NOTE --remote-wait-tab-silent"
+$EDITOR $notef
+
+# create note if necessary
+if ! ipfs files stat /root/mutables/note --hash 2>/dev/null; then
+  ipfs files mkdir -p /root/mutables/note
+  ipfs files chcid --hash sha1 /root/mutables/note
+fi
+
+# create genesis note if doesn't exist
+if ! ipfs files stat /root/mutables/note/note.txt --hash 2>/dev/null; then
+  genesis=z6CfPsNrajGLLoNHWshz5fm6JwY2HBYLAyTARUUwwhWe
+  ipfs files cp /ipfs/$genesis /root/mutables/note/note.txt
+fi
+# get prev
+#qm=$(ipfs files read /root/mutables/note/log.yml | tail -1 | sed -e 's/.*: //')
+qm=$(ipfs files stat /root/mutables/note/note.txt --hash)
+mt=$(ipfs files stat /root/mutables/note --hash)
+
+if ipfs files stat /root/mutables/note/log.yml --hash 2>/dev/null; then
+  log=$(ipfs files stat /root/mutables/note/log.yml --hash)
+else
+  log=z6CfPsNrajGLLoNHWshz5fm6JwY2HBYLAyTARUUwwhWe
+fi
+
+# copy css if necessary
+if ! ipfs files stat /root/mutables/note/style.css 2> /dev/null; then
+  cssfile=/ipfs/QmRFjv9d64L9iNvMzwHU6T2EruRowaoUVe48m115Cib31w
+  ipfs files cp $cssfile /root/mutables/note/style.css --flush=false
+fi
+
+# copy template
+if [ -e $HOME/mutables/note.httt ]; then
+  ttt=$(ipfs add -Q $HOME/mutables/note.httt)
+  ipfs files rm /root/mutables/note/note.httt --flush=false
+  ipfs files cp /ipfs/$ttt /root/mutables/note/note.httt
+fi
+ttt=$(ipfs files stat /root/mutables/note/note.httt --hash)
+
+
+tic=$(date +%s)
+
+# append a ref to previous records...
+echo -e "\n[qm]: http://127.0.0.1:8080/ipfs/$qm\n[mt]: http://gateway.ipfs.io/ipfs/$mt" >> $notef
+qm=$(cat $notef | ipfs add -Q --hash sha1 --cid-base=base58flickr)
+echo qm: $qm
+ipfs files rm /my/note.txt --flush=false
+ipfs files rm /root/mutables/note/note.txt --flush=false
+ipfs files cp /ipfs/$qm /my/note.txt --flush=true
+ipfs files cp /ipfs/$qm /root/mutables/note/note.txt --flush=false
+# publish note ...
+echo $tic: $qm >> $HOME/mutables/note.log
+mh=$(ipfs add -Q --pin=false $HOME/mutables/note.log)
+ipfs files rm /root/mutables/note/log.yml --flush=false
+ipfs files cp /ipfs/$mh /root/mutables/note/log.yml --flush=false
+
+# update index.htm
+date=$(date +%D)
+time=$(date +%T)
+ver=$(version $notef | xyml version)
+idxqm=$(ipfs cat /ipfs/$ttt | \
+sed -e "s|\$date|$date|g" -e "s|\$time|$time|g" -e "s|\$ver\\b|$ver|g" -e "s|\$deps|$deps|g" \
+    -e "s/\$qm/$qm/g" -e "s/\$mt/$mt/g" -e "s/\$log/$log/g" | ipfs add -Q)
+idxfile="/ipfs/$idxqm"
+ipfs files rm /root/mutables/note/index.htm --flush=false
+ipfs files cp $idxfile /root/mutables/note/index.htm --flush=false
+
+echo -n flush: 
+ipfs files flush /root/mutables/note 
+mt=$(ipfs files stat /root/mutables/note --hash)
+echo "url: http://127.0.0.1:8080/ipfs/$mt/index.htm"
+
+# remove local file
+rm -r $HOME/mutables/note.txt
+mv $notef $HOME/mutables/note.txt
+
+# [![](https://img.shields.io/badge/project-blockRingTM-darkgreen.svg?style=flat-square)](http://blockRing™.ml/)

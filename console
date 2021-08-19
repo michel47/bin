@@ -1,0 +1,7 @@
+#
+
+#intent have a terminal that act as a console
+
+#gnome-terminal --title=console --geometry=80x6+0+0 -- sh -islc "PS1=''; tty > $HOME/.tty; " && cat $HOME/.tty
+gnome-terminal --title=console --geometry=80x6+0+0 -- sh -c "sh -islc 'PS1='""'; tty > $HOME/.tty;'; echo /dev/tty > $HOME/.tty"
+exit $?

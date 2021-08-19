@@ -1,0 +1,15 @@
+#
+
+vi -f  -g /tmp/fori.pl
+b="$1"
+e="$2"
+cat <<EOF | perl /dev/stdin
+
+our \$i;
+for \$i ( $b .. $e ) {
+ do "/tmp/fori.pl";
+}
+
+EOF
+
+#exec perl /tmp/fori.pl $*

@@ -1,0 +1,145 @@
+#!/usr/bin/perl
+
+my $flat = 0;
+my $simu = 0;
+my $nospace = 1;
+while (@ARGV && $ARGV[0] =~ m/^-/)
+{
+  $_ = shift;
+  #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
+  if (/^-v(?:erbose)?/) { $verbose= 1; }
+  elsif (/^-n/) { $simu= 1; }
+  elsif (/^--?no?s(?:pace)?/) { $nospace= 1; }
+  elsif (/^--?s(?:pace)?/) { $nospace= 0; }
+  elsif (/^--?f(?:lat)?/) { $flat= 1; }
+  else                  { die "Unrecognized switch: $_\n"; }
+
+}
+#understand variable=value on the command line...
+eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
+
+
+my $file = shift;
+if ( ! -f $file) {
+  printf "warn: ! -f %s\n",$file;
+  $file =~ s/\.mp4/.mkv/;
+  if (! -f $file) {
+    die;
+  }
+}
+my @ver = &version($file);
+printf "file: %s\n",$file;
+my $p = rindex($file,'.');
+my $ext = ($p>0) ? substr($file,$p+1) : 'blob';
+my $bname = ($p>0) ? substr($file,0,$p) : $file;
+
+   $bname =~ s,^\./,,;
+   $bname =~ s,_+v\d\.\d+-\w+$,,;
+   $bname =~ s,\(\d+\)$,,;
+   $bname =~ s,[\-_]$,,;
+
+my $s = rindex($bname,'/');
+my $rname = ($s>0) ? substr($bname,$s+1) : $bname;
+   $bname =~ s,$rname,f$rname, if ($rname !~ m/^[a-z]/i);
+print "bname: $bname\n";
+#print "ext: $ext\n";
+if ($flat) {
+ $bname =~ s,/,-,g;
+}
+if ($nospace) {
+ $bname =~ s, - ,_,g;
+ $bname =~ s, +,-,g;
+}
+ $bname =~ s,&,﹠,g;
+ $bname =~ s,&,%26,g;
+ $bname =~ s,",＂,g;
+ $bname =~ s,',’,g;
+$name = sprintf '%s_v%.2f-%s.%s',$bname,@ver,$ext;
+printf "name: %s\n",$name;
+printf "cmd: <-\n mv %s %s\n",$file,$name;
+
+if ($simu == 0) {
+rename $file, $name or warn $!;
+}
+
+exit $?;
+
+# -----------------------------------------------------------------------
+sub version {
+  my @times = (lstat($_[0]))[8,9,10]; # atime,ctime,mtime
+  my $etime = (sort { $a <=> $b } (@time))[0];
+  my $vtime = (sort { $a <=> $b} (@time[1,2]))[-1]; # biggest ctime,mtime...
+  my $version = &rev($etime);
+
+  if (wantarray) {
+     my $shk = &get_shake(160,$_[0]);
+     print "$_[0] : shk:$shk\n" if $dbug;
+     my $pn = unpack('n',substr($shk,-4)); # 16-bit
+     my $build = &word($pn);
+     return ($version, $build);
+  } else {
+     return sprintf '%g',$version;
+  }
+}
+# -----------------------------------------------------------------------
+sub rev {
+  my ($sec,$min,$hour,$mday,$mon,$yy,$wday,$yday) = (localtime($_[0]))[0..7];
+  my $rweek=($yday+&fdow($_[0]))/7;
+  my $rev_id = int($rweek) * 4;
+  my $low_id = int(($wday+($hour/24)+$min/(24*60))*4/7);
+  my $revision = ($rev_id + $low_id) / 100;
+  return (wantarray) ? ($rev_id,$low_id) : $revision;
+}
+# -----------------------------------------------------
+sub get_shake { # use shake 256 because of ipfs' minimal length of 20Bytes
+  use Crypt::Digest::SHAKE;
+  my $len = shift;
+  local *F; open F,$_[0] or do { warn qq{"$_[0]": $!}; return undef };
+  #binmode F unless $_[0] =~ m/\.txt/;
+  my $msg = Crypt::Digest::SHAKE->new(256);
+  $msg->addfile(*F);
+  my $digest = $msg->done(($len+7)/8);
+  return $digest;
+}
+# -----------------------------------------------------
+sub word { # 20^4 * 6^3 words (25bit worth of data ...)
+ use integer;
+ my $n = $_[0];
+ my $vo = [qw ( a e i o u y )]; # 6
+ my $cs = [qw ( b c d f g h j k l m n p q r s t v w x z )]; # 20
+ my $str = '';
+ if (1 && $n < 26) {
+ $str = chr(ord('A') +$n%26);
+ } else {
+ $n -= 6;
+ while ($n >= 20) {
+   my $c = $n % 20;
+      $n /= 20;
+      $str .= $cs->[$c];
+   #print "cs: $n -> $c -> $str\n";
+      $c = $n % 6;
+      $n /= 6;
+      $str .= $vo->[$c];
+   #print "vo: $n -> $c -> $str\n";
+   
+ }
+ if ($n > 0) {
+   $str .= $cs->[$n];
+ }
+ return $str;   
+ }
+}
+# -----------------------------------------------------------------------
+sub fdow {
+   my $tic = shift;
+   use Time::Local qw(timelocal);
+   ##     0    1     2    3    4     5     6     7
+   #y ($sec,$min,$hour,$day,$mon,$year,$wday,$yday)
+   my $year = (localtime($tic))[5]; my $yr4 = 1900 + $year ;
+   my $first = timelocal(0,0,0,1,0,$yr4);
+   $fdow = (localtime($first))[6];
+   #printf "1st: %s -> fdow: %s\n",&hdate($first),$fdow;
+   return $fdow;
+}
+# -----------------------------------------------------------------------
+1; # $Source: /my/perl/scripts/rename $

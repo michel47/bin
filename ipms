@@ -1,0 +1,23 @@
+#
+
+if [ "x$1" = 'x' ]; then
+echo "--- # $0"
+peerid=$(ipfs --offline config Identity.PeerID)
+gwhost=$(ipfs config Addresses.Gateway|cut -d'/' -f 3)
+gwport=$(ipfs config Addresses.Gateway|cut -d'/' -f 5)
+apiport=$(ipfs config Addresses.API|cut -d'/' -f 5)
+
+echo user: $(perl -S fullname.pl $peerid)
+echo 'addrs: |-'
+ipfs swarm addrs local | sed -e 's/^/  /'
+echo gway: http://$gwhost:$gwport/ipns/$peerid
+echo webui: http://127.0.0.1:$apiport/webui/#/files
+echo api: http://127.0.0.1:$apiport/api/v0/
+echo "# curl -X POST \"http://127.0.0.1:5001/api/v0/config?arg=Identity.PeerID\""
+#ipfs config Addresses.API
+#ipfs config Addresses.Gateway
+ipfs repo stat | grep Path
+else
+  ipfs $*
+fi
+

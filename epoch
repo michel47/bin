@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+
+# searching for the "beginning-of-time" and "end-of-time"
+# *  first counting up until the year goes negative or month goes negative
+# *  then counting down until the year or month go positive
+
+use Time::Local qw(timelocal);
+my $DoW = [qw( Sun Mon Tue Wed Thu Fri Sat )];
+my $MoY = [qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec )];
+
+my $bot = -67768100573596174;
+my $endoftime = 67767976233316804;
+my $never = (1<<31) - 1;
+my $dob = timelocal(rand(60),int(rand(60)),int(1+rand(23)),15,8-1,1973);
+my $ajc = -62167219198; # 
+
+my $bit = 32;
+$epoch = 30 * int($^T/30 + 0.5) - (1<<$bit) - 4 if ($bit); 
+printf "epoch:   %s (0x%X) %s...\n",$epoch,$epoch,&hdate($epoch);
+
+
+if (1) { # going up ...
+   my $yr4 = -(1<<31);
+   # find beginning of time
+   my $tic = $yr4 * 3600 * 24 * 365.25;
+      $tic = -67768100567755255; # -- 
+      #$tic = -67768100567755205; # bang !
+      #$tic = -67768100567755204; # 3 Jan year 00
+      $tic = -67768040609740804 - 1;
+
+   my $step = +1;
+   #y $step = 3600 * 24;
+   $| = 1;
+   while (1) {
+      my ($sec,$min,$hour,$mday,$mon,$yy,$wday) = (gmtime($tic))[0..6];
+      printf "\r".'%+d: %3s, %02d %3s %s %02u:%02u:%02u GMT', $tic,
+          $DoW->[$wday],$mday,$MoY->[$mon],$yr4, $hour,$min,$sec;
+      $yr4 = $yy + 1900;
+      $tic += $step;
+      last if $yy < 0;
+      #last if $mday > 0;
+   }
+   print "\n";
+   $bot = $tic - 1;
+   printf "bot/: %d\n",$tic;
+   # find end of time
+   my $tic = 67767976233316793 - 1;
+   my $step = +1;
+   while (1) {
+      my ($sec,$min,$hour,$mday,$mon,$yy,$wday) = (gmtime($tic))[0..6];
+      printf "\r".'%+d: %3s, %02d %3s %04d %02u:%02u:%02u GMT', $tic,
+          $DoW->[$wday],$mday,$MoY->[$mon],$yr4, $hour,$min,$sec;
+      $yr4 = $yy + 1900;
+      $tic += $step;
+      last if $mday <= 0;
+   }
+   print "\n";
+   printf "eot/: %d\n",$tic-1;
+   $eot = $tic - 1;
+ 
+   # going down ...
+   while (1) {
+      my ($sec,$min,$hour,$mday,$mon,$yy,$wday) = (gmtime($tic))[0..6];
+      printf "\r".'%+d: %3s, %02d %3s %04d %02u:%02u:%02u GMT', $tic,
+          $DoW->[$wday],$mday,$MoY->[$mon],$yr4, $hour,$min,$sec;
+      $yr4 = $yy + 1900;
+      $tic -= $step;
+      last if $mday > 0;
+   }
+   print "\n";
+   printf "eot\\: %d\n",$tic+1;
+
+   my $tic = $bot + 1;
+   while (1) {
+      my ($sec,$min,$hour,$mday,$mon,$yy,$wday) = (gmtime($tic))[0..6];
+      printf "\r".'%+d: %3s, %02d %3s %04d %02u:%02u:%02u GMT', $tic,
+          $DoW->[$wday],$mday,$MoY->[$mon],$yr4, $hour,$min,$sec;
+      $yr4 = $yy + 1900;
+      $tic -= $step;
+      last if $yy > 0;
+      #last if $mday <= 0;
+   }
+   print "\n";
+   printf "bot\\: %d\n",$tic+1;
+}
+
+foreach my $tic (sort { $a <=> $b }
+           ($eot-1,$eot,$eot+1,$bot-1,$bot,$bot+1,-$endoftime, $^T,$epoch,$ajc,-$never-1,0,$dob,$never,$endoftime,-$bot)) {
+printf "tic:     %s (0x%X) %s...\n",$tic,$tic,&hdate($tic);
+}
+
+
+exit $?;
+
+# -----------------------------------------------------
+sub hdate { # return HTTP date (RFC-1123, RFC-2822) 
+  my ($sec,$min,$hour,$mday,$mon,$yy,$wday) = (gmtime($_[0]))[0..6];
+  #die unless $mday;
+  my ($yr4,$yr2) =($yy+1900,$yy%100);
+  # Mon, 01 Jan 2010 00:00:00 GMT
+
+  my $date = sprintf '%3s, %02d %3s %04d %02u:%02u:%02u GMT',
+             $DoW->[$wday],$mday,$MoY->[$mon],$yr4, $hour,$min,$sec;
+  return $date;
+}
+# -----------------------------------------------------
+1;
+
