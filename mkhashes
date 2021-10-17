@@ -202,6 +202,8 @@ echo -n 'genesis' | ipfs add -Q -n --raw-leaves --hash sha3-224 --cid-base base5
 echo -n 'fairTeam' | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
 echo -n '$RELEASE: 0.0.0 - anon' | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
 echo -n 'The publickey QmVHWfUiCDuWGiev4ZYRpFgP4oH7GPiF8vEVoZ6bHCwSd7 is trusted by me' | ipfs add -Q --raw-leaves --pin=true --hash sha3-224 --cid-base base58btc
+# nginx:
+ipfs files stat --hash /ipfs/QmU2Na5kq7tjfSLVZvQYkDAHXdkVt38pWnGkhCJKEv5S5i
 EOT
 qm=$(ipfs add -Q $hashesf)
 #ipfs files mkdir /my/etc

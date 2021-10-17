@@ -1,4 +1,5 @@
 
+# usage: ipmove.sh qm-gc-errors.loh
 IPFS_PATH=${IPFS_PATH:-$HOME/.ipfs}
 PRIVATE_PATH=$HOME/.../ipfs/usb/PRIVATE
 
