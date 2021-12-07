@@ -1,3 +1,7 @@
+#
+# Intent
+#  moving IPFS hashes that cause gc error
+
 
 # usage: ipmove.sh qm-gc-errors.loh
 IPFS_PATH=${IPFS_PATH:-$HOME/.ipfs}
