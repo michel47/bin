@@ -1,6 +1,7 @@
 #!//usr/bin/perl
 
 my $seed;
+my $quiet = 0;
 #--------------------------------
 # -- Options parsing ...
 #
@@ -9,8 +10,9 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
   $_ = shift;
   #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
   if (/^--?v(?:erbose)?/) { $verbose= 1; }
-  elsif (/^--?[ncl]\w*([\d]*)/) { $n= $1 ? $1 : shift; }
+  elsif (/^--?[ncl]\a*([\d]*)/) { $n= $1 ? $1 : shift; }
   elsif (/^--?s(?:eed)?([\d]*)/) { $seed= $1 ? $1 : shift; }
+  elsif (/^--?q(?:uiet)?/) { $quiet= 1; }
   else                  { die "Unrecognized switch: $_\n"; }
 }
 #understand variable=value on the command line...
@@ -18,9 +20,19 @@ eval "\$$1='$2'"while $ARGV[0] =~ /^(\w+)=(.*)/ && shift;
 #--------------------------------
 $seed = ($seed) ? srand($seed) : srand();
 
-printf STDERR "--- # %s\n",$0;
-printf STDERR "n: %s\n",$n if $n;
-printf STDERR "seed: %s\n",$seed;
+if ($verbose) {
+  printf "--- # %s\n",$0;
+  printf "n: %s\n",$n if $n;
+  printf "seed: %s\n",$seed;
+  print  "---\n";
+} else {
+  unless ($quiet) {
+    printf STDERR "--- # %s\n",$0;
+    printf STDERR "n: %s\n",$n if $n;
+    printf STDERR "seed: %s\n",$seed;
+    print STDERR  "...\n";
+  }
+}
 
 local $/ = "\n";
 my @lines = ();

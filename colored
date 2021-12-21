@@ -1,0 +1,46 @@
+#
+# vim: syntax=sh
+
+cmd="$1"
+if [ "x$1" = 'xterm' ]; then
+shift;
+
+profile=$(perl -S sample.pl --quiet -c1 <<EOL
+nighttime
+green
+solarized
+daytime
+others
+EOL
+)
+echo profile: $profile
+
+gnome-terminal --geometry 96x24 --window-with-profile=$profile $*
+else
+if echo "$1" | grep -P -e '^g?vim?' -q ; then
+shift;
+color=$(perl -S sample.pl -q -n1 <<EOL
+molokayo
+oceanic_material
+PaperColor
+challenger_deep
+darkblue
+orbital
+bluewery
+happy_hacking
+ayu
+jellybeans
+deus
+orange-moon
+yellow-moon
+spacecamp_lite
+minimalist
+EOL
+)
+echo color: $color
+vi -geometry 80x32 -g +"set background=dark" +":colo $color" $@
+fi
+fi
+
+
+true; # $Source: /my/shell/script/colored.sh,v $
