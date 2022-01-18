@@ -5,7 +5,7 @@ XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
 cachedir=$XDG_CACHE_HOME/colored
 
 ticms=$(date +%s%N | cut -c-13)
-echo $ticms: $* >> $cachedir/crumbs.log
+echo "$ticms: cd $PWD; $*" >> $cachedir/crumbs.log
 
 cmd="$1"
 if [ "x$1" = 'xterm' ]; then

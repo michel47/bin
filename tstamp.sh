@@ -27,7 +27,6 @@ if [ -e "$file.pending.ots" ]; then
      mv "$file.pending.ots" "$file.${otsid}-complete.ots"
      cp -p "$file.${otsid}-complete.ots" "$HOME/.local/share/ots/stamps/complete/$file.$otsid.ots"
      tsid==$(openssl sha256 -r "$file.pending" | cut -c-12)
-     my "$file.pending" "$file.${tsid}-complete"
-
+     mv "$file.pending" "$file.${tsid}-complete"
    fi
 fi

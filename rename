@@ -33,10 +33,11 @@ my $p = rindex($file,'.');
 my $ext = ($p>0) ? substr($file,$p+1) : 'blob';
 my $bname = ($p>0) ? substr($file,0,$p) : $file;
 
+   $bname =~ s,^(.)\d+,\1n,;
    $bname =~ s,^\./,,;
    $bname =~ s,_+v\d\.\d+-\w+$,,;
-   $bname =~ s,\(\d+\)$,,;
-   $bname =~ s,[\-_]$,,;
+   $bname =~ s,\s?\(\d+\)$,,;
+   $bname =~ s,[\-_]+$,,;
 
 my $s = rindex($bname,'/');
 my $rname = ($s>0) ? substr($bname,$s+1) : $bname;
@@ -47,7 +48,7 @@ if ($flat) {
  $bname =~ s,/,-,g;
 }
 if ($nospace) {
- $bname =~ s, - ,_,g;
+ $bname =~ s, ?- ,_,g;
  $bname =~ s, +,-,g;
 }
  $bname =~ s,&,﹠,g;
