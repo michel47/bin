@@ -19,7 +19,7 @@ if [ $m = 0 ]; then
 fi
 # ------------------------------------------------
 # every 180 days
-m=$(expr $yd % 29)
+m=$(expr $yd % 179)
 if [ $m = 0 ]; then
   echo 6 months have passed
 fi
