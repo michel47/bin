@@ -11,7 +11,9 @@ if changed "$file"; then
  otsid=$(echo $sha | cut -c-12)
  echo otsid: $otsid
  echo $tic: $otsid >> $stamplogf
- mv -f "$file.ots" "$file.prev.ots"
+ if [ -e "$file.ots" ]; then
+   mv -f "$file.ots" "$file.prev.ots"
+ fi
  ots stamp $file
 else
  if [ -e "$file.ots" ]; then
