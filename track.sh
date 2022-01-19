@@ -25,6 +25,12 @@ git commit -uno -m "stamped: $(tail -1 qm.log)"
 arbtt-stats  --filter='$date>='`date +"%Y-%m-%d"` > arbtt-today.csv
 arbtt-stats -x Recreation --output-format csv --for-each day > arbtt-day.csv
 arbtt-stats -x Recreation --output-format csv --for-each month > arbtt-month.csv
+
+cp -p $HOME/.arbtt/capture.log $HOME/.arbtt/capture.log.save
+otid=$(openssl sha256 -r $HOME/.arbtt/capture.log.save | cut -c-12)
+echo otid: $otid
+mv $HOME/.arbtt/capture.log.save $HOME/.arbtt/capture-$otid.log
+ots stamp $HOME/.arbtt/capture-$otid.log
 qm=$(ipfs add -r . -Q --progress=false)
 tic=$(date +%s%N|cut -c-13)
 echo $tic: $qm >> qm.log
