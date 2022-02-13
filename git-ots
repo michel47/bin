@@ -1,0 +1,9 @@
+#
+
+if [ "z$1" = 'zinit' ]; then
+ git-ots-$1
+fi
+
+exit $?
+
+true;

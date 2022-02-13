@@ -22,7 +22,7 @@ ots upgrade qm.log.ots
 git add qm.log qm.log.ots
 git commit -uno -m "stamped: $(tail -1 qm.log)"
 # -----------------------------------------------
-arbtt-stats  --filter='$date>='`date +"%Y-%m-%d"` > arbtt-today.csv
+arbtt-stats  --filter='$date>='`date +"%Y-%m-%d"` | tee arbtt-today.csv
 arbtt-stats -x Recreation --output-format csv --for-each day > arbtt-day.csv
 arbtt-stats -x Recreation --output-format csv --for-each month > arbtt-month.csv
 

@@ -1,0 +1,19 @@
+#
+
+echo "--- # git rev-parse --"
+echo -n 'toplevel: '
+git rev-parse --show-toplevel
+
+echo -n 'gitdir: '
+git rev-parse --git-dir
+
+echo -n 'gitcommondir: '
+git rev-parse --git-common-dir
+
+#echo -n 'localenvvars: '
+#git rev-parse --local-env-vars
+#
+echo 'remotes: '
+git remote -v
+
+

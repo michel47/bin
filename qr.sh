@@ -13,7 +13,7 @@ qm=$(ipfs add -w -Q $@)
 fi
 echo url: https://dweb.link/ipfs/$qm
 echo url: http://$ip:$gwport/ipfs/$qm
-#xdg-open "$chart=http://$ip:$gwport/ipfs/$qm"
+xdg-open "$chart=http://$ip:$gwport/ipfs/$qm"
 
 shortqm=$(echo $qm | cut -c42-)
 echo shortqm: $shortqm

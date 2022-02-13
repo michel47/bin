@@ -1,0 +1,57 @@
+#
+
+
+gitdir=$(git rev-parse --absolute-git-dir)
+top=$(git rev-parse --show-toplevel)
+if git remote | grep -q origin; then
+remote='origin'
+repo=$(git remote get-url origin | sed -e "s/git@.*\.github\.com:/git@github.com:/");
+else
+remote=$(git remote | head -1)
+if [ "x$remote" != 'x' ]; then
+repo=$(git remote get-url $remote);
+else 
+repo=$(git rev-parse --git-dir)
+if [ "r$repo" = 'r.git' ]; then
+  repo=$top$repo
+else
+  repo=$(echo $repo | sed -e 's,/.git$,.git,')
+fi
+repo=$(echo $repo | sed -e 's,/home/,https://ipfs.blockringtm.ml/ipns/hologit.ml/,')
+fi
+fi
+echo gitdir: $gitdir
+echo repo: $repo
+echo top: $top
+dirname=${top##*/}
+echo dirname: $dirname
+reponame=$(basename $repo)
+echo reponame: $reponame
+
+committer=$(git config user.name)
+eval $(perl -S fullname.pl -a $repo | eyml)
+
+
+gwhost=$(ipfs config Addresses.Gateway | cut -d'/' -f 3)
+gwport=$(ipfs config Addresses.Gateway | cut -d'/' -f 5)
+remoteurl=http://$gwhost:$gwport/ipns/hologit.ml/$user/$reponame
+
+if [ "z$1" = 'zset' ]; then
+echo "${repo##*/}; holoGit repository for $dirname by $email (repo: $repo) nid:$nid" > $gitdir/description
+echo remoteurl: $remoteurl
+
+
+if [ "no$remote" = 'no' ]; then
+  git remote add hologit $remoteurl
+  git remote set-url --push hologit $gitdir
+else
+  echo remote: $remote
+fi
+ipfs add --progress=false $gitdir/description
+fi
+echo "${repo##*/}; holoGit repository for $dirname by $email (repo: $repo) nid:$nid" |\
+ cat $gitdir/description | perl -S uniq.pl
+
+
+true; # vim: ft=sh
+
