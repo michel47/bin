@@ -9,7 +9,7 @@ qm="$1"
 xdg-open "$chart=http://$ip:$gwport/ipfs/$qm"
 else 
 chart="https://chart.googleapis.com/chart?cht=qr&chs=222x222&choe=UTF-8&chld=H&chl"
-qm=$(ipfs add -w -Q $@)
+qm=$(ipfs add -w -Q "$@")
 fi
 echo url: https://dweb.link/ipfs/$qm
 echo url: http://$ip:$gwport/ipfs/$qm
@@ -18,5 +18,5 @@ xdg-open "$chart=http://$ip:$gwport/ipfs/$qm"
 shortqm=$(echo $qm | cut -c42-)
 echo shortqm: $shortqm
 curl -s -o qrcode-$shortqm.png "$chart=https://ipfs.safewatch.tk/ipfs/$qm"
-eog qrcode-$shortqm.png
+#eog qrcode-$shortqm.png
 

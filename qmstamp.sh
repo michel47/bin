@@ -23,7 +23,7 @@ qm: $qm
 I undersign $origin, attest the existance
 the document whose hash is $qm (base58 SHA256)
 
--- $date @$op
+-- $date @$ip
 $origin
 EOT
 ipfs add statement.md

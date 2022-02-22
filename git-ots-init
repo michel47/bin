@@ -1,6 +1,8 @@
 #
 
+echo "--- # ${0##*/}"
 gitdir=$(git rev-parse --git-dir)
+echo "gitdir: $gitdir"
 # ipfs add -r .git/ots
 qmemptyd=$(ipfs object new unixfs-dir)
 qmgitots=$(ipfs object patch add-link $qmemptyd ots QmV6R7rCNMSRpM1ycbQ9NK6UJ8biiNoJCyV5UETZRPsVEx)
@@ -10,7 +12,7 @@ chmod a+x $gitdir/ots/ots-git-gpg-wrapper.sh
 git config commit.gpgsign true
 git config gpg.program gpg
 git config gpg.program $(which ots-git-gpg-wrapper)
-git config gpg.program ".git/ots/ots-git-gpg-wrapper.sh"
+git config gpg.program "$gitdir/ots/ots-git-gpg-wrapper.sh"
 
 git config user.signingkey michelc
 

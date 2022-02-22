@@ -1,7 +1,11 @@
 #
 
-if [ "z$1" = 'zinit' ]; then
- git-ots-$1
+if [ "z$1" != 'z' ]; then
+ if which git-ots-$1 1>/dev/null; then
+  git-ots-$1
+ else
+  echo git-ots $1: not defined
+ fi
 fi
 
 exit $?
