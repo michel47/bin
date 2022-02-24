@@ -1,10 +1,11 @@
 #
 
 if [ "z$1" != 'z' ]; then
- if which git-ots-$1 1>/dev/null; then
-  git-ots-$1
+ cmd=$1; shift
+ if which git-ots-$cmd 1>/dev/null; then
+  git-ots-$cmd "$@"
  else
-  echo git-ots $1: not defined
+  echo git-ots $cmd: not defined
  fi
 fi
 
