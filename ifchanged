@@ -10,7 +10,7 @@ fi
 cachedir=${XDG_CACHE_HOME:-$HOME/.cache}
 changelogf=$cachedir/logs/changedlogf.yml
 
-if [ -d $file]; then opt="-r"; fi
+if [ -d $file ]; then opt="-r"; fi
 qm=$(ipfs add -Q -n $opt $file --progress=false)
 if last=$(grep -e "$file" $changelogf | tail -1); then
  #echo last: $last
