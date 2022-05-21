@@ -26,7 +26,10 @@ gnome-terminal --geometry 96x24 --window-with-profile=$profile $*
 else
 if echo "$1" | grep -P -e '^g?vim?' -q ; then
 shift;
-color=$(perl -S sample.pl -q -n1 <<EOL
+seed=$(perl -S random.pl -k $PWD -t 0 10000001 $1)
+echo seed: $seed
+seed_option="-s $seed"
+color=$(perl -S sample.pl $seed_option -q -n1 <<EOL
 molokayo
 oceanic_material
 PaperColor
