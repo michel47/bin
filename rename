@@ -70,8 +70,8 @@ exit $?;
 # -----------------------------------------------------------------------
 sub version {
   my @times = (lstat($_[0]))[8,9,10]; # atime,ctime,mtime
-  my $etime = (sort { $a <=> $b } (@time))[0];
-  my $vtime = (sort { $a <=> $b} (@time[1,2]))[-1]; # biggest ctime,mtime...
+  my $etime = (sort { $a <=> $b } (@times))[0];
+  my $vtime = (sort { $a <=> $b} (@times[1,2]))[-1]; # biggest ctime,mtime...
   my $version = &rev($etime);
 
   if (wantarray) {
@@ -105,32 +105,32 @@ sub get_shake { # use shake 256 because of ipfs' minimal length of 20Bytes
   return $digest;
 }
 # -----------------------------------------------------
-sub word { # 20^4 * 6^3 words (25bit worth of data ...)
- use integer;
- my $n = $_[0];
- my $vo = [qw ( a e i o u y )]; # 6
- my $cs = [qw ( b c d f g h j k l m n p q r s t v w x z )]; # 20
- my $str = '';
- if (1 && $n < 26) {
- $str = chr(ord('A') +$n%26);
- } else {
- $n -= 6;
- while ($n >= 20) {
-   my $c = $n % 20;
+# max word: pabokyrulafivacanud QmVMDSybz4hQnEvxc5PrKqNS7osvLHADgifaZ3PXcJh9PF
+sub word { # 20^4 * 6^3 + 20^3*6^4 words (25.4bit worth of data ...)
+  use Math::Int64 qw(uint64);
+  my $n = uint64($_[0]);
+  my $vo = [qw ( a e i o u y )]; # 6
+  my $cs = [qw ( b c d f g h j k l m n p q r s t v w x z )]; # 20
+  my $str = '';
+  $str = chr(ord('a') +$n%26);
+  $n /= 26;
+  my $vnc = ($str =~ /[aeiouy]/) ? 1 : 0;
+  while ($n > 0) {
+    if ($vnc) {
+      my $c = $n % 20;
       $n /= 20;
       $str .= $cs->[$c];
-   #print "cs: $n -> $c -> $str\n";
-      $c = $n % 6;
+      $vnc = 0;
+      #print "cs: $n -> $c -> $str\n";
+    } else {
+      my $c = $n % 6;
       $n /= 6;
       $str .= $vo->[$c];
-   #print "vo: $n -> $c -> $str\n";
-   
- }
- if ($n > 0) {
-   $str .= $cs->[$n];
- }
- return $str;   
- }
+      $vnc = 1;
+      #print "vo: $n -> $c -> $str\n";
+    }
+  }
+  return $str;
 }
 # -----------------------------------------------------------------------
 sub fdow {

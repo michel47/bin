@@ -50,7 +50,7 @@ if ($key =~ m/^Qm/) {
  if ($cid eq "\x01\x55" || $cid eq "\x01\x70") {
    #my $header = substr($bindata,0,4);
    $bindata = substr($bindata,4);
- } else {
+ } elsif (substr($bindata,0,1) eq "\x01") {
    $bindata = substr($bindata,2); # remove header
  }
 printf "sha2: f%s\n",unpack('H*',$bindata) if $dbug;
