@@ -13,4 +13,4 @@ gwport=$(ipfs config Addresses.Gateway | cut -d'/' -f 5)
 echo "--- # ${0##*/}"
 echo label: $nslabel
 echo nskey: $nskey
-echo url: https://127.0.0.1:$gwport/ipns/$nskey
+echo url: http://127.0.0.1:$gwport/ipns/$nskey

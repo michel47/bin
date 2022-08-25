@@ -9,7 +9,7 @@ fi
 # adding a pin to a qm on pinata
 qm="$1"
 label="$2"
-appid="$(ipfs add -w $0 -Q)/${0##*/}"
+appid="$(ipfs add -w $0 -Q | cut -c-39 --complement)/${0##*/}"
 echo "--- # ${0##*/}"
 echo appid: $appid
 

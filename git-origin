@@ -3,7 +3,7 @@
 
 if [ ! -d .git ];then
   ipfs get -o .git /ipfs/QmazJbuRuEKtKPmc9aVzvoe8xQDQt6XGWSa16uYTE5gnDA/holoGit/itrifone/8c8042a378f1db0ba13e0c8216590155.git
-  git init;
+  git init -b main;
 else 
   #ipfs get -o .git /ipns/hologit.ml/itrifone/8c8042a378f1db0ba13e0c8216590155.git
   ipfs get -o .git /ipns/QmZjRH6Ht4sRGgnvXHYyJAdmi7QoCW2shBXXavWmjzZb8k/itrifone/8c8042a378f1db0ba13e0c8216590155.git

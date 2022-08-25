@@ -1,5 +1,7 @@
 #
 
+# This daily script is run via "atq"
+#
 # vim: syntax=sh
 tic=$(date +%s)
 day=$(date +%j)
@@ -14,6 +16,18 @@ ipfs add $0 $HOME/etc/crontab-l.txt | perl -S stamped.pl >> $HOME/etc/stamped.lo
 #cd $HOME/repo/github.com/covid19
 #sh ./daily.sh > daily.log 2>&1
 
+# -----------------------------------------------------------------------------
+# public data ...
+if [ -d /keybase/public/$USER ]; then
+ cd /keybase/public/$USER;
+ sh mfssync.sh
+ sh publish.sh
+ cd repo/carep
+ sh refs.sh
+ cd ../../registry;
+ sh publish.sh
+
+fi
 # -----------------------------------------------------------------------------
 if op=$(expr $day % 4); then true; fi
 echo op: $op
