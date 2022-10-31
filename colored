@@ -7,6 +7,7 @@ cachedir=$XDG_CACHE_HOME/colored
 ticms=$(date +%s%N | cut -c-13)
 echo "$ticms: cd $PWD; $*" >> $cachedir/crumbs.log
 
+# x-terminal-emulator %s
 cmd="$1"
 if [ "x$1" = 'xterm' ]; then
 shift;
@@ -18,6 +19,7 @@ solarized
 daytime
 lake
 others
+watch
 EOL
 )
 echo profile: $profile
@@ -48,7 +50,7 @@ minimalist
 EOL
 )
 echo color: $color
-vi -geometry 80x32 -g +"set background=dark" +":colo $color" $@
+vi -geometry 80x32 -g +"set background=dark" +":colo $color" "$@"
 fi
 fi
 
