@@ -43,21 +43,25 @@ my $bname = ($p>0) ? substr($file,0,$p) : $file;
 
 my $s = rindex($bname,'/');
 my $rname = ($s>0) ? substr($bname,$s+1) : $bname;
-   $bname =~ s,$rname,f$rname, if ($rname !~ m/^[a-z]/i);
-print "bname: $bname\n";
+my $fpath = ($s>0) ? substr($bname,0,$s) : '.';
+   $rname = 'f'.$rname, if ($rname !~ m/^[a-z]/i);
+print "rname: $rname\n";
 #print "ext: $ext\n";
 if ($flat) {
- $bname =~ s,/,-,g;
+ $rname = $bname;
+ $rname =~ s,/,-,g;
+ $fpath = '.';
 }
 if ($nospace) {
- $bname =~ s, ?- ,_,g;
- $bname =~ s, +,-,g;
+ $rname =~ s, ?- ,_,g;
+ $rname =~ s, +,-,g;
 }
- $bname =~ s,&,﹠,g;
- $bname =~ s,&,%26,g;
- $bname =~ s,",＂,g;
- $bname =~ s,',’,g;
-$name = sprintf '%s_v%.2f-%s.%s',$bname,@ver,$ext;
+ $rname =~ s,&,﹠,g;
+ $rname =~ s,&,%26,g;
+ $rname =~ s,",＂,g;
+ $rname =~ s,',’,g;
+
+$name = sprintf '%s/%s_v%.2f-%s.%s',$fpath,$rname,@ver,$ext;
 printf "name: %s\n",$name;
 printf "cmd: <-\n mv %s %s\n",$file,$name;
 

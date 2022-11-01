@@ -15,6 +15,12 @@ if false; then sudo -k -A id; fi
 key=micheL2GJkWmVJB5RSVi8Rf94mj39FhGT4H8ymQprQB
 keypair=/keybase/private/$USER/SOLkeys/$key.json
 openssl sha256 -r $keypair
+
+
+# -----------------------------------------------------
+sh $HOME/.../ipfs/ipns-map.sh > $HOME/.local/share/logs/ipns-map.log
+# -----------------------------------------------------
+sh $HOME/bin/monitor.sh > $HOME/.local/share/logs/monitor.log
 # -----------------------------------------------------
 ## Safewatch Demo Patient
 sh $HOME/repo/keybase/SWPoC/demo/cronjob.sh > $HOME/repo/keybase/SWPoC/demo/cronjob.log 2>&1

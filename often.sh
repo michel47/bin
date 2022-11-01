@@ -8,8 +8,10 @@ export DISPLAY=:1
 export SUDO_ASKPASS=/usr/libexec/seahorse/ssh-askpass
 export SUDO_ASKPASS="$kbhome/bin/sudopass.pl"
 
+
 ticns=$(date +%s%N)
 echo ticsns: $ticns
+echo $ticns >> $HOME/.local/share/logs/often.log
 sudo -k -A id
 
 

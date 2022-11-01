@@ -3,8 +3,8 @@
 # intent:
 #  add hash of files to be removed to the qmremoved.log
 IPFS_PATH=${IPFS_PATH:-$HOME/.ipfs}
-if [ ! -d $HOME/.../mutables ]; then mkdir -p $HOME/.../mutables; fi
-if [ ! -d $HOME/.../sets ]; then mkdir -p $HOME/.../sets; fi
+if [ ! -d $HOME/.../share/mutables ]; then mkdir -p $HOME/.../share/mutables; fi
+if [ ! -d $HOME/.../share/sets ]; then mkdir -p $HOME/.../share/sets; fi
 echo "--- # $0"
 for f in $*; do
 if [ -e "$f" ]; then
@@ -27,8 +27,8 @@ echo f: $f
 echo qm: $qm
 echo zb: $zb
 if [ "x$qm" != 'x' ]; then
-echo $qm >> $HOME/.../mutables/qmremoved.log
-echo $qm: $zb >> $HOME/.../sets/qm2zb.log
+echo $qm >> $HOME/.../share/mutables/qmremoved.log
+echo $qm: $zb >> $HOME/.../share/sets/qm2zb.log
 echo $qm >> $HOME/etc/removed.mh58
 echo tic: $(date +%s)
 ipfs --timeout 5s dht findprovs -n 1 /ipfs/$qm

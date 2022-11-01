@@ -1,7 +1,7 @@
 #
 
 # intent:
-#   use arbtt to track attention givent to projects
+#   use arbtt to track attention given to projects
 
 export PATH=$HOME/.../ipfs/bin:$HOME/repo/gitea/bin:$PATH
 

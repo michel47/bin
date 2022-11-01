@@ -79,7 +79,7 @@ cd $HOME/my/stuff
 sh fun.sh
 cd $pwd
 # -----------------------------------------------------------------------------
-cd $HOME/.../mutables/state
+cd $HOME/.../share/mutables/state
 sh collectqm.sh
 sh publish.sh
 cd $pwd
