@@ -1,8 +1,10 @@
 #
 
+
 echo "--- # ${0##*/}"
 gitdir=$(git rev-parse --git-dir)
 echo "gitdir: $gitdir"
+export IPFS_PATH=/media/michelc/Elements/repos/ipfs/DEFAULT
 # ipfs add -r .git/ots
 qmemptyd=$(ipfs object new unixfs-dir)
 qmgitots=$(ipfs object patch add-link $qmemptyd ots QmV6R7rCNMSRpM1ycbQ9NK6UJ8biiNoJCyV5UETZRPsVEx)

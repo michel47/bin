@@ -73,7 +73,7 @@ exit $?;
 
 # -----------------------------------------------------------------------
 sub version {
-  my @times = (lstat($_[0]))[8,9,10]; # atime,ctime,mtime
+  my @times = (lstat($_[0]))[8,9,10]; # atime,mtime,ctime
   my $etime = (sort { $a <=> $b } (@times))[0];
   my $vtime = (sort { $a <=> $b} (@times[1,2]))[-1]; # biggest ctime,mtime...
   my $version = &rev($etime);

@@ -178,6 +178,7 @@ while (1) {
                   $REPO.'/COLD',
                   $REPO.'/ESSENCE',
                    @iplists,
+                  '/media/'.$ENV{USER}.'/Elements/repos/ipfs/DEFAULT',
                   '/media/'.$ENV{USER}.'/4TB/IPFS/PERMLINK',
                   '/media/'.$ENV{USER}.'/4TB/IPFS/INFINITE',
                   '/media/'.$ENV{USER}.'/4TB/IPFS/COLD',

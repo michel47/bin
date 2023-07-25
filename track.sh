@@ -7,6 +7,16 @@ export PATH=$HOME/.../ipfs/bin:$HOME/repo/gitea/bin:$PATH
 
 logd=$HOME/.local/share/logs
 cd $logd
+echo ls -lta $HOME
+ls -lta $HOME | head
+echo stat:
+stat -c "%W: %i %s %n %X %Y %Z viminfo" $HOME/.viminfo
+#stat -c "%Y history" $HOME/.bash_history
+#stat -c "%X bashrc" $HOME/.bashrc
+echo timelog:
+sh $HOME/bin/timelog.sh
+echo .
+
 
 gitid=$(git rev-parse HEAD)
 tic=$(date +%s%N|cut -c-13)
@@ -14,14 +24,18 @@ echo $tic: $gitid >> gitid.log
 echo "--- # ${0##*/}"
 date=$(date)
 echo date: $date
+echo tic: $tic
 # -----------------------------------------------
 # previously:
 echo gitid: $gitid
 rm -f qm.log.ots.bak
 ots upgrade qm.log.ots
 git add qm.log qm.log.ots
+export GIT_AUTHOR_IDENT=logger@timetack.ml
 git commit -uno -m "stamped: $(tail -1 qm.log)"
 # -----------------------------------------------
+echo arbtt:
+ps -aux | grep -e '[a]rbtt'
 find $HOME/.arbtt -name "*.log" -mtime +60 -delete
 arbtt-stats  --filter='$date>='`date +"%Y-%m-%d"` | tee arbtt-today.csv
 arbtt-stats -x Recreation --output-format csv --for-each day > arbtt-day.csv

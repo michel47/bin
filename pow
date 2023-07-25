@@ -1,0 +1,104 @@
+#!/usr/bin/perl
+
+
+my $file = shift;
+my $buf = &readfile($file);
+
+printf "--- # %s\n",$0;
+
+my $key = 'X-PoW';
+my $p = index($buf, $key.': ');
+my $q = index($buf, "\n",$p+length($key)+2);
+my $githdr = "X-githash: e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\n";
+$q += length($githdr);
+printf "p: %s\n",$p;
+printf "q: %s\n",$q;
+
+my $header = substr($buf,0,$p);
+my $powhdr = substr($buf,$p,$q-$p);
+my $footer = substr($bu
+  ,$q+1);
+
+printf "header: %s\n",$header;
+printf "footer: %s\n",$footer;
+
+#y $gitid = unpack('H*',$gitbin);
+my $gitid = &githash($buf,length($buf));
+my $id7 = substr($gitid,0,7);
+printf "id7: %s\n",$id7;
+
+
+my $forever = 1;
+my $len = 2;
+my $target = 'a'x$len;
+
+while ($forever) {
+
+$vanigit = "X-PoW: $target\nX-githash: $gitid\n";
+my $size = length($header.$vanigit) + length($footer);
+printf "size: %s\n",$size;
+my $seen = ();
+while ($id7 ne $target) {
+  $target = $id7;
+  $vanigit = "X-PoW: $id7\nX-githash: $gitid\n";
+  $gitid = githash($header.$vanigit.$footer,$size);
+  $id7 = substr($gitid,0,$len);
+  printf "id7: %s %s %s\r",$target,$gitid,$seen{$id7};
+  $seen{$id7}++;
+}
+print "\n";
+if ($seen{$id7} > 1) {
+  writefile("out$len.md",$header,$vanigit,$footer);
+  printf "%s: gitid: %s\n",$target,$gitid;
+  $len++;
+  $size++;
+  $target = 'a'x$len;
+  printf "len: %s\n",$len;
+  $id7 = substr($gitid,0,$len);
+  $seed = ();
+  last if $len > 9;
+}
+
+}
+
+writefile('out.md',$header,$vanigit,$footer);
+# git hash-object out.md
+
+
+exit $?;
+
+sub githash {
+ use Digest::SHA1 qw();
+ my $size = pop;
+ my $msg = Digest::SHA1->new() or die $!;
+    $msg->add(sprintf "blob %u\0",$size);
+    $msg->add(@_);
+ my $digest = $msg->hexdigest();
+ return $digest; # hex format !
+}
+
+
+sub readfile { # Ex. my $content = &readfile($filename);
+  #y $intent = "read a (simple) file";
+  my $file = shift;
+  if (! -e $file) {
+    print "// Error: readfile.file: ! -e $file\n";
+    return undef;
+  }
+  local *F; open F,'<',$file; binmode(F);
+  local $/ = undef;
+  my $buf = <F>;
+  close F;
+  return $buf;
+}
+sub writefile { # Ex. &writefile($filename, $data1, $data2);
+  #y $intent = "write a (simple) file";
+  my $file = shift;
+  local *F; open F,'>',$file; binmode(F);
+  print "// storing file: $file\n";
+  for (@_) { print F $_; }
+  close F;
+  print "=$..\n";
+  return $.;
+}
+1;

@@ -3,7 +3,7 @@
 # usage:
 #  perl -S intent.pl  -i "state your intent..."
 
-my $intent = "Bringing humanity-changing technology to the you";
+my $intent = "Bringing humanity-changing technology to the authentic you";
 while (@ARGV && $ARGV[0] =~ m/^-/)
 {
   $_ = shift;
@@ -23,7 +23,20 @@ my $pass = &get_pass();
 
 my $sha2 = &khash('SHA256',$pass,$intent);
 my $sha16 = unpack'H*',$sha2;
+my $sha36 = lc &encode_base36($sha2);
+print "--- # intentional yaml ;)\n";
 printf "sha2: f%s\n",$sha16;
+printf "sha2: k%s\n",$sha36;
+# MIRC information
+my $routing = substr($sha16,0,9); # bank routing number or RTN (transit number)
+my $branch = substr($sha16,9,7);  # branch identifiant
+my $account = substr($sha16,16,17);  # account number
+$account =~ s/.../$&-/;
+my $chqn = substr($sha16,33,5);
+printf "routing: %s\n",$routing;
+printf "branch: %s\n",$branch;
+printf "account: %s\n",$account;
+printf "chqn %s\n",$chqn;
 
 my $tic = time();
 my $key = substr($sha16,-10,7);
@@ -41,6 +54,15 @@ sub khash { # keyed hash
       $msg->add($data);
    my $hash = $msg->digest();
    return $hash;
+}
+
+sub encode_base36 {
+  use Math::BigInt;
+  use Math::Base36 qw();
+  my $n = Math::BigInt->from_bytes(shift);
+  my $k36 = Math::Base36::encode_base36($n,@_);
+  #$k36 =~ y,0-9A-Z,A-Z0-9,;
+  return $k36;
 }
 
 sub get_pass() {
