@@ -1,0 +1,14 @@
+#
+
+for i in $*; do
+
+f=$(urldec "$i")
+if [ -e "$f" ]; then
+echo "rm -f \"$f\""
+rm -f "$f"
+else
+  echo "! -e \"$f\""
+fi
+
+done
+exit $?

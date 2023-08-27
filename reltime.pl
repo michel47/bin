@@ -5,10 +5,12 @@ use Time::Local qw(timelocal);
 
 printf "--- # %s\n",$0;
 my $rpw = 4; # release per week
-printf "period: %drel/wk %sh (%sd)\n",$rpw, 24  / ($rpw/7), 7/$rpw;
-my $tic = time;
+my $tic = shift || time;
 my @time = localtime($tic);
 my ($sec,$min,$hour,$day,$mon,$year,$wday,$yday) = @time;
+printf "tic: %s (r%s+%s)\n",&hdate($tic),&rev($tic);
+printf "period: %drel/wk %sh (%sd)\n",$rpw, 24  / ($rpw/7), 7/$rpw;
+
 my $midnight = timelocal(0,0,0,$day,$mon,1900+$year);
 printf "midnight: %s\n",&hdate($midnight);
 
@@ -22,15 +24,15 @@ my $ver = undef;
 my $tic = $sunday;
 my @rev = &rev($tic);
 my $rel =  ($rev[0] + $rev[1]) / 100;
-  printf "v%.02f (r%d+%d) %s %s (last Sunday)\n",$rel,@rev,$tic,&hdate($tic);
+  printf "v%.02f (r%03d+%d) %s %s (previous Sunday)\n",$rel,@rev,$tic,&hdate($tic);
   $ver = $rel;
 
-for $mm (0 .. 10 * 24 * 60 ) {
+for $mm (0 .. 7 * 24 * 60 ) {
   my $tic = $sunday + ($mm) * 60;
   my @rev = &rev($tic);
   my $rel =  ($rev[0] + $rev[1]) / 100;
   if ($rel != $ver) {
-    printf "v%.02f (r%d+%d) %s %s\n",$rel,@rev,$tic,&hdate($tic);
+    printf "v%.02f (r%03d+%d) %s %s\n",$rel,@rev,$tic,&hdate($tic);
   }
   $ver = $rel;
 }
@@ -48,7 +50,7 @@ sub rev {
 
 sub fdow {
    my $tic = shift;
-   use Time::Local qw(timelocal);
+   use Time::Local qw(timelocal timegm);
    ##     0    1     2    3    4     5     6     7
    #y ($sec,$min,$hour,$day,$mon,$year,$wday,$yday)
    my $year = (localtime($tic))[5]; my $yr4 = 1900 + $year ;

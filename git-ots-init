@@ -1,13 +1,17 @@
 #
 
-
+# ipfs add -w .git/ots/ots-git-gpg-wrapper.sh
+# QmV6R7rCNMSRpM1ycbQ9NK6UJ8biiNoJCyV5UETZRPsVEx
+# QmYP6EXjCv8Qanp5AcnFrNfBQtz7tZmyRsfQkK6VzBKutB
+# QmZaY22LNVXn9Z5Z22Z6Nbp8wGfc9TiCFtoE43EpW23vKY
+qmwrapper=QmZaY22LNVXn9Z5Z22Z6Nbp8wGfc9TiCFtoE43EpW23vKY
 echo "--- # ${0##*/}"
 gitdir=$(git rev-parse --git-dir)
 echo "gitdir: $gitdir"
 export IPFS_PATH=/media/michelc/Elements/repos/ipfs/DEFAULT
 # ipfs add -r .git/ots
 qmemptyd=$(ipfs object new unixfs-dir)
-qmgitots=$(ipfs object patch add-link $qmemptyd ots QmV6R7rCNMSRpM1ycbQ9NK6UJ8biiNoJCyV5UETZRPsVEx)
+qmgitots=$(ipfs object patch add-link $qmemptyd ots $qmwrapper)
 ipfs get -o $gitdir /ipfs/$qmgitots
 chmod a+x $gitdir/ots/ots-git-gpg-wrapper.sh
 

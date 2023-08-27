@@ -49,19 +49,19 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
     $arg = shift(@ARGV);
 
     $quiet = 1,       next if $arg =~ m/^-[qs]$/;
-    $what = $1 ? "$1" : shift || 'name', next if $arg =~ m/^-w(?:hat)?+(\w+)?$/;
+    $what = $1 ? "$1" : shift || 'name', next if $arg =~ m/^--?w(?:hat)?+(\w+)?$/;
     $human = 1,       next if $arg =~ m/^-d$/;
-    $mail = 1,        next if $arg =~ m/^-m(?:ail)?$/;
-    $log = 1,        next if $arg =~ m/^-l(?:og)?$/;
-    $id = 1,         next if $arg =~ m/^-i(?:d)?$/i;
-    $rcs = $1 ? "$1" : shift || 'file.txt', next if $arg =~ m/^-r(?:cs)?+(\.*)?$/;
-    $cvs = 1,        next if $arg =~ m/^-c(?:vs)?$/;
-    $http = 1,        next if $arg =~ m/^-h(?:ttp|tml?)?$/;
-    $tag= $1 ? "t$1" : shift || 'tag', next if $arg =~ m/^-t(\w+)?$/;
-    $touch = 1,       next if $arg =~ m/^-u(?:time)?$/;
-    $touch = 1,       next if $arg =~ m/^-to(?:uch)?$/;
-    $event = $1 ? $1 : shift || 'me',  next if $arg =~ m/^-a(?:ge)?+(\w+)?$/;
-    $usage = 1,       next if $arg =~ m/^-h(?:elp)?$/;
+    $mail = 1,        next if $arg =~ m/^--?m(?:ail)?$/;
+    $log = 1,        next if $arg =~ m/^--?l(?:og)?$/;
+    $id = 1,         next if $arg =~ m/^--?i(?:d)?$/i;
+    $rcs = $1 ? "$1" : shift || 'file.txt', next if $arg =~ m/^--?r(?:cs)?+(\.*)?$/;
+    $cvs = 1,        next if $arg =~ m/^-->c(?:vs)?$/;
+    $http = 1,        next if $arg =~ m/^--?h(?:ttp|tml?)?$/;
+    $tag= $1 ? "t$1" : shift || 'tag', next if $arg =~ m/^--?t(\w+)?$/;
+    $touch = 1,       next if $arg =~ m/^--?u(?:time)?$/;
+    $touch = 1,       next if $arg =~ m/^--?to(?:uch)?$/;
+    $event = $1 ? $1 : shift || 'me',  next if $arg =~ m/^--?a(?:ge)?+(\w+)?$/;
+    $usage = 1,       next if $arg =~ m/^--?h(?:elp)?$/;
 
 }
 #understand variable=value on the command line...
