@@ -1,0 +1,16 @@
+#
+
+nslabel=${1:-self}
+
+if ipfs key list | grep -q -w $nslabel; then
+ nskey=$(ipfs key list -l --ipns-base b58mh| grep -w $nslabel | head -1 | cut -d' ' -f1);
+else
+ nskey=$(ipfs key gen -t rsa -s 3072 --ipns-base b58mh $nslabel | cut -d' ' -f1);
+fi
+gwport=$(ipfs config Addresses.Gateway | cut -d'/' -f 5)
+
+
+echo "--- # ${0##*/}"
+echo label: $nslabel
+echo nskey: $nskey
+echo url: http://127.0.0.1:$gwport/ipns/$nskey

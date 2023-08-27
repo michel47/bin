@@ -1,0 +1,33 @@
+#
+
+pwd=$PWD
+PROJ_HOME=${PROJ_HOME:-$HOME/projects/OBT/SWPoC}
+cd $PROJ_HOME
+ipfs add -w -r lib etc | grep -v '/' | cut -d' ' -f2- > 3qm.txt
+etc=$(cat 3qm.txt | grep etc | cut -d' ' -f1);
+lib=$(cat 3qm.txt | grep lib | cut -d' ' -f1);
+site=$(tail -1 3qm.txt | cut -d' ' -f1);
+echo site:$site
+echo lib:$lib
+cd $pwd
+
+ack -l 'use lib' *.pl | while read f; do
+perl -pn \
+  -e "s,({?[A-Z][A-Z_]+}?)=(['\"])?/ipfs/\w+(['\"])?,\$1=\2/ipfs/${site}\3,;" \
+ -e "s,use lib '/ipfs/\w*';,use lib '/ipfs/$lib';,;" \
+ $f > $f~
+#  -e "s,{PROJ_HOME}=\"/ipfs/.*\",{PROJ_HOME}=\"/ipfs/$site\",;" \
+if [ "$?" -ne 0 ]; then
+  diff $f $f~ | head
+  echo "failed (no changes)"
+else
+  if diff --color $f $f~; then # no diff
+    echo "no changes for $f"
+    rm $f~
+  else
+    mv $f $f~1 && mv $f~ $f
+    echo "diff --color=always $f~1 $f | less -R"
+    echo "mv $f~1 $f # to revert the changes"
+  fi
+fi
+done

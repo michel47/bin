@@ -1,0 +1,9 @@
+#
+
+dirname=${PWD##*/}
+name=${dirname#.}
+echo $name;
+
+duc gui -d /tmp/$name.duc . &
+duc index -d /tmp/$name.duc . ;
+duc gui -d /tmp/$name.duc . ;

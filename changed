@@ -1,0 +1,28 @@
+#
+
+tic=$(date +%s%N | cut -c-13)
+file="${1:-/dev/stdin}"
+if [ ! -e $file ]; then
+exit 251
+fi
+
+cachedir=${XDG_CACHE_HOME:-$HOME/.cache}
+changelogf=$cachedir/logs/changedlogf.yml
+size=$(stat -c '%s' $file)
+qm=$(ipfs add -Q -n $file --progress=false)
+if last=$(grep -e "$file" $changelogf | tail -1); then
+ #echo last: $last
+ prev=$(echo $last | cut -d' ' -f2)
+ if [ "z$qm" != "z$prev" ]; then
+   echo "file: $file"
+   echo prev: $prev
+   echo "qm: $qm (new)"
+   echo "$tic $qm $size $file" >> $changelogf
+   exit 0
+ else 
+   echo "qm: $qm ($file is the same)"
+   exit 1
+ fi
+fi
+
+

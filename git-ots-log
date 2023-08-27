@@ -1,0 +1,7 @@
+#
+
+git log --show-signature "$@"
+
+exit $?
+
+true;

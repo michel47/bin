@@ -1,0 +1,5 @@
+#
+
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGL.so.1
+#$(which -a obs | tail +2 | head -1) $@
+/usr/bin/obs $@

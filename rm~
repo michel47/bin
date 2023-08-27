@@ -1,0 +1,28 @@
+#
+
+#export IPFS_PATH=/media/$USER/4TB/IPFS/PREVIOUSLY
+#find . -name '*~1' 2>/dev/null -print0 | xargs -0 -L 10 -I{} ipfs add --raw-leaves --cid-base base58btc -Q "{}"
+
+if false; then
+# tarball
+#export IPFS_PATH=/media/$USER/4TB/IPFS/PREVIOUSLY
+#find . -name '*~1' 2>/dev/null -print0 | xargs -0 -t tar cf - | ipfs tar add
+qmtar=$(find . -name '*~1' 2>/dev/null | tar cf - -T - | ipfs tar add)
+#ipfs block get $qmtar| xxd | head -2
+#echo "env IPFS_PATH=$IPFS_PATH ipfs object get $qmtar | json_xs | less"
+echo "env IPFS_PATH=$IPFS_PATH ipfs dag get $qmtar | json_xs"
+echo tar: $qmtar
+fi
+
+# Content Archive
+rm -f /tmp/rmcar.log
+export IPFS_PATH=/media/$USER/4TB/IPFS/PREVIOUSLY
+export NVM_DIR="$HOME/.config/nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+find . -name '*~1' 2>/dev/null -print0| xargs -0 ipfs-car pack 2>>/tmp/rmcar.log | ipfs dag import --pin-roots=false
+qm=$(cat /tmp/rmcar.log)
+ticms=$(date +%s%N | cut -c-13)
+echo $ticms: $qm >> $HOME/var/logs/rmcar.log
+
+find . -name '*~1' -delete 2>/dev/null
+echo $ticms: $qm

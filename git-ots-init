@@ -1,0 +1,44 @@
+#
+
+# intent:
+#   setup git with the latest ots-git-gpg wrapper
+#
+# ipfs add -w .git/ots/ots-git-gpg-wrapper.sh
+# 1690275586003: QmYP6EXjCv8Qanp5AcnFrNfBQtz7tZmyRsfQkK6VzBKutB
+# 1645516570002: QmZaY22LNVXn9Z5Z22Z6Nbp8wGfc9TiCFtoE43EpW23vKY
+# 1644746587001: QmV6R7rCNMSRpM1ycbQ9NK6UJ8biiNoJCyV5UETZRPsVEx
+# (reverse chronology)
+
+export IPFS_PATH=/media/michelc/Elements/repos/ipfs/DEFAULT
+if wrapper=$(which ots-git-gpg-wrapper.sh); then
+  ticms=$(date +%s%N | cut -c-13)
+  qmwrapper=$(ipfs add -w "$wrapper" -Q)
+  sed -e "s/qmwrapper=[Q]m.*/qmwrapper=$qmwrapper/" \
+    -e "/^# ipfs/s/\$/\n# $ticms: $qmwrapper/" $0 > $0~
+  if [ $? -eq 0 ]; then
+     ls -l $0~
+     git-add $0
+  fi
+else  
+  qmwrapper=QmZaY22LNVXn9Z5Z22Z6Nbp8wGfc9TiCFtoE43EpW23vKY
+fi
+
+exit
+
+echo "--- # ${0##*/}"
+gitdir=$(git rev-parse --git-dir)
+echo "gitdir: $gitdir"
+# ipfs add -r .git/ots
+qmemptyd=$(ipfs object new unixfs-dir)
+qmgitots=$(ipfs object patch add-link $qmemptyd ots $qmwrapper)
+ipfs get -o $gitdir /ipfs/$qmgitots
+chmod a+x $gitdir/ots/ots-git-gpg-wrapper.sh
+
+git config commit.gpgsign true
+git config gpg.program gpg
+git config gpg.program $(which ots-git-gpg-wrapper)
+git config gpg.program "$gitdir/ots/ots-git-gpg-wrapper.sh"
+
+git config user.signingkey michelc
+
+

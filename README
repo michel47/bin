@@ -1,5 +1,4 @@
-#!/usr/bin/env cat
-
+#!/bin/tail +2
 === README ===
 
   This is where my scripts reside ...

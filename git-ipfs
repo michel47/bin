@@ -1,0 +1,10 @@
+#
+
+if [ "i$1" = 'ipush' ]; then
+  git-push-ipfs.sh
+  exit $?
+fi
+
+
+true; # vim: ft=sh
+

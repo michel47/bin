@@ -1,0 +1,31 @@
+#
+
+echo "--- # $0"
+echo "cmd-shell:"
+echo " echo '$1 filter=git-crypt diff=git-crypt >> .gitattributes'"
+
+top=$(git rev-parse --show-toplevel)
+if [ ! -e $top/.gitattributes ]; then
+cat > $top/.gitattributes <<EOT
+*jwt* filter=git-crypt diff=git-crypt
+*.sec* filter=git-crypt diff=git-crypt
+*.key* filter=git-crypt diff=git-crypt
+secrets/** filter=git-crypt diff=git-crypt
+.gitattributes !filter !diff
+EOT
+git add $top/.gitattributes
+fi
+
+if [ ! -e .gitattributes ]; then
+cat > .gitattributes <<EOT
+$1 filter=git-crypt diff=git-crypt
+.gitattributes !filter !diff
+EOT
+else 
+echo "$1 filter=git-crypt diff=git-crypt" >> .gitattributes
+fi
+
+git add .gitattributes
+
+exit $?
+true;

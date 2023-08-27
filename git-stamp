@@ -1,0 +1,18 @@
+#
+
+if [ "z$1" = 'zlog' ]; then
+ git log | tee git-log.txt
+if [ -e git-log.txt.ots ]; then
+  hash=$(ots info "gitlog.txt.ots" | grep -e hash: | cut -d' ' -f4)
+  otsid=$(echo $hash | cut -c-12)
+  if ots upgrade git-log.txt.ots; then
+  mv "git-log.txt.ots" "git-log.txt.${otsid}-complete.ots"
+  else
+  mv "git-log.txt.ots" "git-log.txt.pending.ots"
+  fi
+fi
+ ots stamp git-log.txt
+fi
+
+
+true; # vim: syntax=sh

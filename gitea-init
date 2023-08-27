@@ -1,0 +1,6 @@
+#
+
+top=$(git rev-parse --show-toplevel)
+reponame=${top##*/}
+echo repo: $reponame
+git remote add origin git@gitea.localhost:Admin/$reponame.git

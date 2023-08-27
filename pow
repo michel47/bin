@@ -1,0 +1,147 @@
+#!/usr/bin/perl
+
+
+my $file = shift;
+my $buf = &readfile($file);
+
+use Time::HiRes qw(time);
+use YAML qw(DumpFile LoadFile);
+
+
+printf "--- # %s\n",$0;
+my $mtime = (lstat($file))[9];
+my $ticns = int($mtime * 1000_000_000);
+
+my $key = 'X-githash';
+my $p = index($buf, $key.': ');
+my $q = index($buf, "\n",$p+length($key)+2);
+my $githdr = "$key: e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\n";
+   $githdr .= sprintf "X-Ticns: %s\n",$ticns;
+
+$q = $p + length($githdr);
+printf "p: %s\n",$p;
+printf "q: %s\n",$q;
+
+my $header = substr($buf,0,$p);
+my $powhdr = substr($buf,$p,$q-$p);
+my $footer = substr($buf,$q+1);
+
+printf "githdr: %s---\n",$githdr;
+printf "powhdr: %s---\n",$powhdr;
+
+printf "header: %s",$header;
+printf "footer: %s...\n",$footer;
+
+$buf = $header.$footer;
+my $githash = &githash($buf,length($buf));
+my $magic = substr($githash,0,3);
+
+my $forever = 1;
+my $len = 2;
+my $gitid = $githash;
+my $target = substr($gitid,-$len);
+printf "gitid: %s\n",$gitid;
+printf "magic: %s\n",$magic;
+printf "target: %s\n",$target;
+
+my $tics = (lstat($file))[9]; # 1690 279 173.868 328 985
+my $ticns = int($tics * 1000_000_000);
+while ($forever) {
+
+$vanigit = "X-githash: $magic*$target\nX-Ticns: $ticns\n";
+my $size = length($header.$vanigit) + length($footer);
+printf "size: %s\n",$size;
+
+my $playback = (-e 'playback.yml') ? LoadFile('playback.yml') : {};
+printf "time: %s\n",$tics;
+my $found = undef;
+while ($found ne $target) {
+  my $ns = $playback->{$target} || 0;
+  $target2 = $magic;
+  printf "ticns: %u + %u (%s*%s)\n",$ticns,$ns,$target2,$target;
+  while ($ns < 1000_000_000) {
+    my $tstamp = sprintf'%u',$ticns+$ns;
+    $vanigit = "X-githash: $target2*$target\nX-Ticns: $tstamp\n";
+    $githash = githash($header.$vanigit.$footer,$size);
+    $found = substr($githash,-$len);
+    if ($found eq $target) {
+      $playback->{$found} = $ns - 3;
+      $magic = substr($githash,0,3);
+      if ($magic eq $target2 ) {
+        printf "%s: %s*%s{%d} %s %s -> ",$tstamp,$target2,$target,$len,$githash,$seen{$found};
+        writefile("out$len.md",$header,$vanigit,$footer);
+        DumpFile('playback.yml',$playback);
+        $len++; $size++;
+        $target = substr($githash,-$len);
+        $target2 = substr($githash,0,3);
+        printf "%s*%s\n",$target2,$target;
+        last;
+      } else {
+        printf "%s.%s: %s*%s %s %s\r",$tics,$ns,$target2,$target,$githash;
+      }
+    }
+    $ns++;
+  }
+  if ($found ne $target) {
+    $ns = 0;
+    $playback->{$target} = 0;
+    $target2 = substr($githash,0,3);
+    DumpFile('playback.yml',$playback);
+  }
+}
+print "\n";
+if ($seen{$found} > 1) {
+  writefile("out$len.md",$header,$vanigit,$footer);
+  printf "%s: gitid: %s\n",$target,$gitid;
+  $len++;
+  $size++;
+  $target = 'a'x$len;
+  printf "len: %s\n",$len;
+  $id7 = substr($gitid,0,7);
+  $seed = ();
+  last if $len > 9;
+}
+
+}
+
+writefile('out.md',$header,$vanigit,$footer);
+# git hash-object out.md
+
+
+exit $?;
+
+sub githash {
+ use Digest::SHA1 qw();
+ my $size = pop;
+ my $msg = Digest::SHA1->new() or die $!;
+    $msg->add(sprintf "blob %u\0",$size);
+    $msg->add(@_);
+ my $digest = $msg->hexdigest();
+ return $digest; # hex format !
+}
+
+
+sub readfile { # Ex. my $content = &readfile($filename);
+  #y $intent = "read a (simple) file";
+  my $file = shift;
+  if (! -e $file) {
+    print "// Error: readfile.file: ! -e $file\n";
+    return undef;
+  }
+  local *F; open F,'<',$file; binmode(F);
+  local $/ = undef;
+  my $buf = <F>;
+  close F;
+  return $buf;
+}
+sub writefile { # Ex. &writefile($filename, $data1, $data2);
+  #y $intent = "write a (simple) file";
+  my $file = shift;
+  local *F; open F,'>',$file; binmode(F);
+  #print "// storing file: $file\n";
+  for (@_) { print F $_; }
+  close F;
+  #print "=$..\n";
+  return $.;
+}
+1;

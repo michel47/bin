@@ -1,0 +1,60 @@
+#
+# vim: syntax=sh
+
+XDG_CACHE_HOME=${XDG_CACHE_HOME:-$HOME/.cache}
+cachedir=$XDG_CACHE_HOME/colored
+
+ticms=$(date +%s%N | cut -c-13)
+echo "$ticms: cd $PWD; $*" >> $cachedir/crumbs.log
+
+# x-terminal-emulator %s
+cmd="$1"
+if [ "x$1" = 'xterm' ]; then
+shift;
+
+profile=$(perl -S sample.pl --quiet -c1 <<EOL
+nighttime
+green
+solarized
+daytime
+lake
+others
+watch
+EOL
+)
+echo profile: $profile
+
+gnome-terminal --geometry 96x24 --window-with-profile=$profile $*
+else
+if echo "$1" | grep -P -e '^g?vim?' -q ; then
+shift;
+# random.pl -k $key -t $tic $max $IVmsg
+for i; do last="$i"; done
+seed=$(perl -S random.pl -k $PWD -t 0 10000001 "$last")
+echo "seed: $seed # (for '$last')"
+seed_option="-s $seed"
+color=$(perl -S sample.pl $seed_option -q -n1 <<EOL
+molokayo
+oceanic_material
+PaperColor
+challenger_deep
+darkblue
+orbital
+bluewery
+happy_hacking
+ayu
+jellybeans
+deus
+orange-moon
+yellow-moon
+spacecamp_lite
+minimalist
+EOL
+)
+echo color: $color
+vi -geometry 80x32 -g +"set background=dark" +":colo $color" "$@"
+fi
+fi
+
+
+true; # $Source: /my/shell/script/colored.sh,v $

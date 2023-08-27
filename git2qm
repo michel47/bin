@@ -1,0 +1,17 @@
+#
+
+# usage:
+#  locate -b .md | xargs git2qm
+echo "--- # $0"
+for f in $*; do
+echo f: $f
+qm=$(ipfs --offline add -Q -n $f)
+zb=$(ipfs --offline add -Q -n --raw-leaves --cid-base base58btc $f)
+gitid=$(git hash-object $f)
+echo gitid: $gitid
+echo qm: $qm
+echo zb: $zb
+echo $gitid: $qm >> $HOME/etc/sets/git2qm.log
+echo $qm: $zb >> $HOME/etc/sets/qm2zb.log
+done
+echo tic: $(date +%s)
