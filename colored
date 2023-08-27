@@ -28,8 +28,10 @@ gnome-terminal --geometry 96x24 --window-with-profile=$profile $*
 else
 if echo "$1" | grep -P -e '^g?vim?' -q ; then
 shift;
-seed=$(perl -S random.pl -k $PWD -t 0 10000001 $1)
-echo seed: $seed
+# random.pl -k $key -t $tic $max $IVmsg
+for i; do last="$i"; done
+seed=$(perl -S random.pl -k $PWD -t 0 10000001 "$last")
+echo "seed: $seed # (for '$last')"
 seed_option="-s $seed"
 color=$(perl -S sample.pl $seed_option -q -n1 <<EOL
 molokayo

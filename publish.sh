@@ -34,11 +34,13 @@ echo "qmprev: $qmroot"
 #ipfs ls $root | sed -e 's/^/  /' -e 's/ -/:/'
 qmpub=$(ipfs files stat --hash "$ipath")
 if [ "z$qmpub" != 'z' ]; then
-  qmtemp=$(ipfs object patch rm-link $qmroot "$dname") && qmroot=$qmtemp
-  qmtemp=$(ipfs object patch add-link -p $qmroot "$dname" $qmpub) && qmroot=$qmtemp
+  qmtemp=$(ipfs object patch rm-link $qmroot "$dname" --allow-big-block) && qmroot=$qmtemp
+  qmtemp=$(ipfs object patch add-link -p $qmroot "$dname" $qmpub --allow-big-block) && qmroot=$qmtemp
 echo "qmroot: $qmroot"
   ipfs ls /ipfs/$qmroot --timeout 3s | sed -e 's/^/  /' -e 's/ -/:/'
-  ipfs name publish --key=$keyid /ipfs/$qmroot
+  ipfs name publish --key=$keyid /ipfs/$qmroot --allow-offline
+  tic=$(date +%s)
+  echo $tic: $symb:$keyid $qmroot >> $HOME/var/logs/published.log
 fi
 
 exit $?;

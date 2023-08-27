@@ -40,6 +40,10 @@ if ($dec) {
       $cidv = 1;
       $bin = &decode_base58(substr($buf,1));
       $mhash = substr($bin,2);
+   } elsif ($buf =~ m/^Z/) {
+      $cidv = 1;
+      $bin = &decode_base58f(substr($buf,1));
+      $mhash = substr($bin,2);
    } elsif ($buf =~ m/^b/i) {
       $bin = &decode_base32(substr($buf,1));
       $cidv = unpack'C',substr($bin,0,1);

@@ -24,15 +24,16 @@ my $ver = undef;
 my $tic = $sunday;
 my @rev = &rev($tic);
 my $rel =  ($rev[0] + $rev[1]) / 100;
-  printf "v%.02f (r%03d+%d) %s %s (previous Sunday)\n",$rel,@rev,$tic,&hdate($tic);
+  printf "v%.02f (r%03d+%d) %s %s %s (previous Sunday)\n",$rel,@rev,$tic,&hdate($tic),&ltime($tic);
   $ver = $rel;
 
-for $mm (0 .. 7 * 24 * 60 ) {
+
+for $mm (0 .. (365 + 7 + 1) * 24 * 60 ) {
   my $tic = $sunday + ($mm) * 60;
   my @rev = &rev($tic);
   my $rel =  ($rev[0] + $rev[1]) / 100;
   if ($rel != $ver) {
-    printf "v%.02f (r%03d+%d) %s %s\n",$rel,@rev,$tic,&hdate($tic);
+    printf "v%.02f (r%03d+%d) %s %s %s\n",$rel,@rev,$tic,&hdate($tic),&ltime($tic);
   }
   $ver = $rel;
 }
@@ -58,6 +59,13 @@ sub fdow {
    $fdow = (localtime($first))[6];
    #printf "1st: %s -> fdow: %s\n",&hdate($first),$fdow;
    return $fdow;
+}
+
+sub ltime { # return local time
+  my $DoW = [qw( Sun Mon Tue Wed Thu Fri Sat )];
+  my ($sec,$min,$hour,$wday) = (localtime($_[0]))[0..2,6];
+  my $time = sprintf '%3s, %02u:%02u:%02u',$DoW->[$wday],$hour,$min,$sec;
+  return $time;
 }
 
 sub hdate { # return HTTP date (RFC-1123, RFC-2822) 

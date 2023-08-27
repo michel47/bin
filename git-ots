@@ -1,5 +1,8 @@
 #
 
+# intent:
+#  bifurcate git ots command
+#
 if [ "z$1" != 'z' ]; then
  cmd=$1; shift
  if which git-ots-$cmd 1>/dev/null; then

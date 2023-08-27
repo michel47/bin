@@ -32,7 +32,7 @@ ping -D -A -W 3 -c 3 opensea.io && s=1
 echo  " $?." >> $cachedir/sunstatus.log
 p=$(cat $cachedir/sunstatus.txt)
 echo $s > $cachedir/sunstatus.txt
-echo "$p->$s."
+echo "transition: $p->$s ($cachedir/sunstatus.txt)"
 
 if [ "$s" = '0' -a "$p" != '0' ]; then
 echo "My Internet down again" > /home/michelc/.ipfs/blocks/ED/AFKREIBULR2LB6AUY75KCVPVL6L7EWGWQ2YBY4EE4AOXTHNZ5VSGYFYEDM.data

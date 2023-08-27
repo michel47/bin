@@ -9,6 +9,7 @@ crontab -l > $HOME/etc/crontab-l.txt
 # -----------------------------------------------------
 USER=michelc
 HOME=/home/$USER
+export PATH=$PATH:$HOME/.../ipfs/bin
 export DISPLAY=:1
 export SUDO_ASKPASS="$(which ssh-askpass)"
 if false; then sudo -k -A id; fi
@@ -16,16 +17,18 @@ key=micheL2GJkWmVJB5RSVi8Rf94mj39FhGT4H8ymQprQB
 keypair=/keybase/private/$USER/SOLkeys/$key.json
 openssl sha256 -r $keypair
 
+# -----------------------------------------------------
+## Safewatch Demo Patient
+sh $HOME/projects/OBT/SWPoC/demo/cronjob.sh > $HOME/projects/OBT/SWPoC/demo/cronjob.log 2>&1
+sh $HOME/projects/OBT/devops/analysis/cronjob.sh > $HOME/projects/OBT/devops/analysis/cronjob.log 2>&1
+
+
+# -----------------------------------------------------
 sh $HOME/bin/publish.sh
 # -----------------------------------------------------
 sh $HOME/.../ipfs/ipns-map.sh > $HOME/.local/share/logs/ipns-map.log
 # -----------------------------------------------------
 sh $HOME/bin/monitor.sh > $HOME/.local/share/logs/monitor.log
-# -----------------------------------------------------
-## Safewatch Demo Patient
-sh $HOME/projects/OBT/SWPoC/demo/cronjob.sh > $HOME/projects/OBT/SWPoC/demo/cronjob.log 2>&1
-
-
 # -----------------------------------------------------
 if ps -ax | grep -e '\<D[s+]\>'; then
 loadok=0
