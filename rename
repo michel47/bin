@@ -2,6 +2,7 @@
 
 my $flat = 0;
 my $simu = 0;
+my $keep = 1;
 my $nospace = 1;
 while (@ARGV && $ARGV[0] =~ m/^-/)
 {
@@ -9,6 +10,7 @@ while (@ARGV && $ARGV[0] =~ m/^-/)
   #/^-(l|r|i|s)(\d+)/ && (eval "\$$1 = \$2", next);
   if (/^-v(?:erbose)?/) { $verbose= 1; }
   elsif (/^-n/) { $simu= 1; }
+  elsif (/^--?k(?:eep)?/) { $keep= 1; }
   elsif (/^--?no?s(?:pace)?/) { $nospace= 1; }
   elsif (/^--?s(?:pace)?/) { $nospace= 0; }
   elsif (/^--?f(?:lat)?/) { $flat= 1; }
@@ -61,12 +63,17 @@ if ($nospace) {
  $rname =~ s,",＂,g;
  $rname =~ s,',’,g;
 
-$name = sprintf '%s/%s_v%.2f-%s.%s',$fpath,$rname,@ver,$ext;
+$name = sprintf '%s/%s_v%.2f-%s.%s',$fpath,$rname,@ver[0,1],$ext;
 printf "name: %s\n",$name;
-printf "cmd: <-\n mv %s %s\n",$file,$name;
 
 if ($simu == 0) {
-rename $file, $name or warn $!;
+  if ($keep = 1) {
+    link $file, $name or warn $!;
+    printf "cmd: <-\n rm %s\n",$file;
+  } else {
+    rename $file, $name or warn $!;
+    printf "cmd: <-\n mv %s %s\n mv %s %s\n",$file,$name,$name,$file;
+  }
 }
 
 exit $?;
@@ -81,7 +88,8 @@ sub version {
   if (wantarray) {
      my $shk = &get_shake(160,$_[0]);
      print "$_[0] : shk:$shk\n" if $dbug;
-     my $pn = unpack('n',substr($shk,-4)); # 16-bit
+     #my $pn = unpack('n',substr($shk,-4)); # 16-bit
+     my $pn = unpack('n',substr($shk,-7,6)); # 40-bit
      my $build = &word($pn);
      return ($version, $build);
   } else {
@@ -101,8 +109,8 @@ sub rev {
 sub get_shake { # use shake 256 because of ipfs' minimal length of 20Bytes
   use Crypt::Digest::SHAKE;
   my $len = shift;
-  local *F; open F,$_[0] or do { warn qq{"$_[0]": $!}; return undef };
-  #binmode F unless $_[0] =~ m/\.txt/;
+  local *F; open *F,$_[0] or do { warn qq{"$_[0]": $!}; return undef };
+  binmode F unless $_[0] =~ m/\.txt/;
   my $msg = Crypt::Digest::SHAKE->new(256);
   $msg->addfile(*F);
   my $digest = $msg->done(($len+7)/8);
